@@ -26,6 +26,16 @@ import re
 import requests
 from flask import Flask, render_template, request, jsonify, send_file, g, redirect, url_for, flash
 
+# Load .env file if present
+_env_file = os.path.join(os.path.dirname(__file__), ".env")
+if os.path.exists(_env_file):
+    with open(_env_file, "r", encoding="utf-8") as _f:
+        for _line in _f:
+            _line = _line.strip()
+            if _line and not _line.startswith("#") and "=" in _line:
+                _k, _v = _line.split("=", 1)
+                os.environ.setdefault(_k.strip(), _v.strip())
+
 from analyzer import (
     analyze_document, calculate_risk_summary, LEGAL_DISCLAIMER,
     call_gemini_api, CLAUSE_CATEGORIES, RISK_LEVELS
