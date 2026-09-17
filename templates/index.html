@@ -1,0 +1,1108 @@
+{% extends "base.html" %}
+
+{% block title %}Understand Any Legal Document - ClauseWise AI{% endblock %}
+
+{% block content %}
+<div class="space-y-12 pb-16 max-w-5xl mx-auto">
+
+    <!-- ====================================================================
+         SECTION 1: HERO SECTION
+         ==================================================================== -->
+    <section class="text-center pt-4 pb-2 space-y-5" aria-labelledby="hero-heading">
+        <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold bg-blue-50 text-secondary border border-blue-200">
+            <span class="w-2 h-2 rounded-full bg-accent animate-pulse"></span>
+            ClauseWise AI Legal Document Intelligence
+        </div>
+        
+        <h1 id="hero-heading" class="font-display text-4xl sm:text-5xl lg:text-6xl font-bold text-primary tracking-tight leading-tight max-w-3xl mx-auto">
+            Understand Any Legal Document
+        </h1>
+
+        <p class="text-base sm:text-lg text-muted max-w-2xl mx-auto leading-relaxed">
+            Upload a contract, lease, or policy. Get a plain-English breakdown of every clause, risk flags, and questions to ask before you sign — in seconds, not billable hours.
+        </p>
+
+        <!-- Trust Row -->
+        <div class="pt-2 flex flex-wrap items-center justify-center gap-y-2 gap-x-6 text-xs sm:text-sm font-medium text-slate-600">
+            <span class="inline-flex items-center gap-1.5">
+                <span aria-hidden="true">🔒</span> Documents deleted after processing
+            </span>
+            <span class="text-slate-300 hidden sm:inline">•</span>
+            <span class="inline-flex items-center gap-1.5">
+                <span aria-hidden="true">📋</span> Clause-by-clause breakdown
+            </span>
+            <span class="text-slate-300 hidden sm:inline">•</span>
+            <span class="inline-flex items-center gap-1.5">
+                <span aria-hidden="true">❓</span> Lawyer-ready question list
+            </span>
+        </div>
+    </section>
+
+    <!-- ====================================================================
+         SECTION 2: EXAMPLE PREVIEW (Fetched from /api/sample)
+         ==================================================================== -->
+    <section aria-labelledby="example-preview-heading" class="bg-white rounded-2xl p-6 sm:p-8 border border-slate-200 shadow-sm space-y-6">
+        <div class="flex items-center justify-between border-b border-slate-100 pb-4">
+            <div>
+                <h2 id="example-preview-heading" class="font-display text-xl sm:text-2xl font-semibold text-primary">
+                    See how it works
+                </h2>
+                <p class="text-xs sm:text-sm text-muted">Realistic examples demonstrating automated clause intelligence & redline comparison</p>
+            </div>
+            <span class="hidden sm:inline-flex items-center text-xs font-semibold px-2.5 py-1 rounded bg-slate-100 text-slate-700">
+                Interactive Preview
+            </span>
+        </div>
+
+        <!-- Dynamic Container for 2 Example Cards -->
+        <div id="sample-cards-container" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <!-- Loading Skeleton for Example Cards -->
+            <div class="p-5 border border-slate-200 rounded-xl bg-slate-50 animate-pulse space-y-3">
+                <div class="h-4 bg-slate-200 rounded w-1/3"></div>
+                <div class="h-16 bg-slate-200 rounded"></div>
+                <div class="h-4 bg-slate-200 rounded w-2/3"></div>
+            </div>
+            <div class="p-5 border border-slate-200 rounded-xl bg-slate-50 animate-pulse space-y-3">
+                <div class="h-4 bg-slate-200 rounded w-1/3"></div>
+                <div class="h-16 bg-slate-200 rounded"></div>
+                <div class="h-4 bg-slate-200 rounded w-2/3"></div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ====================================================================
+         SECTION 3: MODE SELECTOR (TABS)
+         ==================================================================== -->
+    <section aria-label="Analysis Mode Selection" class="space-y-6">
+        <div class="flex flex-col sm:flex-row items-center justify-center gap-3">
+            <button type="button" id="tab-analyze" aria-controls="panel-analyze" aria-selected="true" role="tab"
+                    class="w-full sm:w-auto px-6 py-3.5 rounded-xl font-semibold text-sm sm:text-base flex items-center justify-center gap-2.5 transition-all shadow-sm bg-primary text-white">
+                <span aria-hidden="true">📄</span> Analyze One Document
+            </button>
+            <button type="button" id="tab-compare" aria-controls="panel-compare" aria-selected="false" role="tab"
+                    class="w-full sm:w-auto px-6 py-3.5 rounded-xl font-semibold text-sm sm:text-base flex items-center justify-center gap-2.5 transition-all border border-slate-300 bg-white text-slate-700 hover:bg-slate-50">
+                <span aria-hidden="true">⚖️</span> Compare Two Documents
+            </button>
+        </div>
+
+        <!-- Global Alert Banner for Upload / API Errors -->
+        <div id="error-banner" role="alert" class="hidden rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-800 space-y-2">
+            <div class="flex items-start justify-between gap-3">
+                <div class="flex items-center gap-2 font-semibold">
+                    <svg class="w-5 h-5 text-red-600 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
+                    </svg>
+                    <span id="error-message">An error occurred.</span>
+                </div>
+                <button type="button" id="error-dismiss-btn" class="text-red-700 hover:text-red-900 text-xs font-semibold uppercase">Dismiss</button>
+            </div>
+        </div>
+
+        <!-- ================================================================
+             SECTION 4a: ANALYZE UPLOAD ZONE (Default Mode)
+             ================================================================ -->
+        <div id="panel-analyze" role="tabpanel" aria-labelledby="tab-analyze" class="bg-white rounded-2xl border border-slate-200 p-6 sm:p-10 shadow-sm text-center">
+            <h3 class="sr-only">Upload Document for Analysis</h3>
+            
+            <form id="analyze-form" class="space-y-6">
+                <!-- Dropzone -->
+                <div id="analyze-dropzone" tabindex="0" role="button" aria-label="Upload document drop zone: Drop your contract here or click to browse"
+                     class="dropzone group border-2 border-dashed border-slate-300 rounded-2xl p-8 sm:p-12 hover:border-accent hover:bg-slate-50/70 cursor-pointer focus:outline-none focus:ring-2 focus:ring-accent transition-all flex flex-col items-center justify-center gap-3">
+                    <input type="file" id="analyze-file-input" name="file" accept=".pdf,.docx,.txt" class="hidden" aria-label="Select document file">
+                    
+                    <!-- Cloud Upload Icon -->
+                    <div class="w-14 h-14 rounded-full bg-blue-50 text-secondary flex items-center justify-center group-hover:scale-110 transition-transform">
+                        <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                        </svg>
+                    </div>
+
+                    <div class="space-y-1">
+                        <p class="font-medium text-slate-800 text-base sm:text-lg">
+                            <span class="text-primary font-semibold underline underline-offset-2">Drop your document here</span> or click to browse
+                        </p>
+                        <p class="text-xs sm:text-sm text-muted">Supports PDF, DOCX, TXT • Max 10MB</p>
+                    </div>
+                </div>
+
+                <!-- Selected File Display -->
+                <div id="analyze-file-info" class="hidden items-center justify-between p-4 rounded-xl bg-slate-50 border border-slate-200 text-left">
+                    <div class="flex items-center gap-3 truncate">
+                        <span class="text-xl" aria-hidden="true">📄</span>
+                        <div class="truncate">
+                            <p id="analyze-filename" class="font-semibold text-sm text-slate-800 truncate"></p>
+                            <p id="analyze-filesize" class="text-xs text-muted"></p>
+                        </div>
+                    </div>
+                    <button type="button" id="analyze-remove-file" class="text-xs font-semibold text-red-600 hover:text-red-800 px-2 py-1 rounded">Remove</button>
+                </div>
+
+                <!-- Action Button -->
+                <div id="analyze-action-container" class="hidden">
+                    <button type="submit" id="analyze-submit-btn" aria-label="Analyze Document"
+                            class="w-full sm:w-auto px-8 py-3.5 rounded-xl font-semibold text-base text-white bg-primary hover:bg-[#162c47] focus:outline-none focus:ring-4 focus:ring-blue-100 transition-all shadow-sm">
+                        Analyze Document →
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <!-- ================================================================
+             SECTION 4b: COMPARE UPLOAD ZONE (Compare Mode, Hidden Initially)
+             ================================================================ -->
+        <div id="panel-compare" role="tabpanel" aria-labelledby="tab-compare" class="hidden bg-white rounded-2xl border border-slate-200 p-6 sm:p-10 shadow-sm">
+            <h3 class="sr-only">Upload Two Documents for Comparison</h3>
+            
+            <form id="compare-form" class="space-y-6">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 text-center">
+                    
+                    <!-- Document A Dropzone -->
+                    <div class="space-y-3">
+                        <div class="flex items-center justify-between text-xs font-semibold text-slate-600 uppercase tracking-wider px-1">
+                            <span>Document A (e.g. Original Draft)</span>
+                            <span id="doc-a-status" class="text-muted">Empty</span>
+                        </div>
+                        <div id="compare-dropzone-a" tabindex="0" role="button" aria-label="Upload Document A drop zone"
+                             class="dropzone group border-2 border-dashed border-slate-300 rounded-xl p-6 hover:border-accent hover:bg-slate-50 cursor-pointer transition-all flex flex-col items-center justify-center gap-2">
+                            <input type="file" id="compare-file-a" name="file_a" accept=".pdf,.docx,.txt" class="hidden" aria-label="Select Document A">
+                            <div class="w-10 h-10 rounded-full bg-slate-100 text-slate-700 flex items-center justify-center group-hover:scale-105 transition-transform">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                                </svg>
+                            </div>
+                            <p class="text-sm font-medium text-slate-800">Select Document A</p>
+                            <p class="text-xs text-muted truncate max-w-[200px]" id="doc-a-label">PDF, DOCX, TXT (Max 10MB)</p>
+                        </div>
+                    </div>
+
+                    <!-- Document B Dropzone -->
+                    <div class="space-y-3">
+                        <div class="flex items-center justify-between text-xs font-semibold text-slate-600 uppercase tracking-wider px-1">
+                            <span>Document B (e.g. Redline / Counterparty)</span>
+                            <span id="doc-b-status" class="text-muted">Empty</span>
+                        </div>
+                        <div id="compare-dropzone-b" tabindex="0" role="button" aria-label="Upload Document B drop zone"
+                             class="dropzone group border-2 border-dashed border-slate-300 rounded-xl p-6 hover:border-accent hover:bg-slate-50 cursor-pointer transition-all flex flex-col items-center justify-center gap-2">
+                            <input type="file" id="compare-file-b" name="file_b" accept=".pdf,.docx,.txt" class="hidden" aria-label="Select Document B">
+                            <div class="w-10 h-10 rounded-full bg-slate-100 text-slate-700 flex items-center justify-center group-hover:scale-105 transition-transform">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                                </svg>
+                            </div>
+                            <p class="text-sm font-medium text-slate-800">Select Document B</p>
+                            <p class="text-xs text-muted truncate max-w-[200px]" id="doc-b-label">PDF, DOCX, TXT (Max 10MB)</p>
+                        </div>
+                    </div>
+
+                </div>
+
+                <!-- Compare Action Button -->
+                <div id="compare-action-container" class="hidden text-center pt-2">
+                    <button type="submit" id="compare-submit-btn" aria-label="Compare Documents"
+                            class="w-full sm:w-auto px-8 py-3.5 rounded-xl font-semibold text-base text-white bg-accent hover:bg-[#0c8b8b] focus:outline-none focus:ring-4 focus:ring-teal-100 transition-all shadow-sm">
+                        Compare Documents →
+                    </button>
+                </div>
+            </form>
+        </div>
+
+    </section>
+
+    <!-- ====================================================================
+         SECTION 5: PROCESSING STATE (Hidden Initially)
+         ==================================================================== -->
+    <section id="processing-state" aria-live="polite" class="hidden bg-white rounded-2xl border border-slate-200 p-8 sm:p-12 shadow-sm text-center space-y-6">
+        <div class="inline-flex items-center gap-3 px-4 py-1.5 rounded-full bg-slate-100 border border-slate-200">
+            <span class="status-dot-pulse"></span>
+            <span id="processing-message" class="text-sm font-medium text-slate-700">📖 Reading document...</span>
+        </div>
+
+        <!-- Striped Animated Progress Bar -->
+        <div class="w-full max-w-md mx-auto bg-slate-100 h-3 rounded-full overflow-hidden border border-slate-200">
+            <div class="progress-bar-striped bg-secondary h-full rounded-full w-full"></div>
+        </div>
+
+        <p class="text-xs text-muted">Analyzing structure, legal categories, and cross-referencing provisions...</p>
+    </section>
+
+    <!-- ====================================================================
+         SECTION 6: INLINE RESULTS SECTION (Rendered dynamically via JS)
+         ==================================================================== -->
+    <section id="results-section" aria-live="polite" class="hidden space-y-8"></section>
+
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+(function () {
+    "use strict";
+
+    // ------------------------------------------------------------------------
+    // STATE & VARIABLES
+    // ------------------------------------------------------------------------
+    let currentJobId = null;
+    let selectedAnalyzeFile = null;
+    let selectedCompareFileA = null;
+    let selectedCompareFileB = null;
+    let processingInterval = null;
+
+    const processingSteps = [
+        "📖 Reading document...",
+        "🔍 Identifying clauses...",
+        "⚖️ Assessing risk levels...",
+        "📝 Preparing your summary..."
+    ];
+
+    // DOM Elements
+    const tabAnalyze = document.getElementById("tab-analyze");
+    const tabCompare = document.getElementById("tab-compare");
+    const panelAnalyze = document.getElementById("panel-analyze");
+    const panelCompare = document.getElementById("panel-compare");
+    const errorBanner = document.getElementById("error-banner");
+    const errorMessage = document.getElementById("error-message");
+    const errorDismissBtn = document.getElementById("error-dismiss-btn");
+    const processingState = document.getElementById("processing-state");
+    const processingMessage = document.getElementById("processing-message");
+    const resultsSection = document.getElementById("results-section");
+
+    // Analyze Elements
+    const analyzeDropzone = document.getElementById("analyze-dropzone");
+    const analyzeFileInput = document.getElementById("analyze-file-input");
+    const analyzeFileInfo = document.getElementById("analyze-file-info");
+    const analyzeFilename = document.getElementById("analyze-filename");
+    const analyzeFilesize = document.getElementById("analyze-filesize");
+    const analyzeRemoveFile = document.getElementById("analyze-remove-file");
+    const analyzeActionContainer = document.getElementById("analyze-action-container");
+    const analyzeForm = document.getElementById("analyze-form");
+
+    // Compare Elements
+    const compareDropzoneA = document.getElementById("compare-dropzone-a");
+    const compareFileInputA = document.getElementById("compare-file-a");
+    const docALabel = document.getElementById("doc-a-label");
+    const docAStatus = document.getElementById("doc-a-status");
+
+    const compareDropzoneB = document.getElementById("compare-dropzone-b");
+    const compareFileInputB = document.getElementById("compare-file-b");
+    const docBLabel = document.getElementById("doc-b-label");
+    const docBStatus = document.getElementById("doc-b-status");
+
+    const compareActionContainer = document.getElementById("compare-action-container");
+    const compareForm = document.getElementById("compare-form");
+
+    // ------------------------------------------------------------------------
+    // UTILITY HELPERS
+    // ------------------------------------------------------------------------
+    function formatBytes(bytes) {
+        if (bytes === 0) return "0 Bytes";
+        const k = 1024;
+        const sizes = ["Bytes", "KB", "MB", "GB"];
+        const i = Math.floor(Math.log(bytes) / Math.log(k));
+        return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + " " + sizes[i];
+    }
+
+    function showError(msg) {
+        errorMessage.textContent = msg || "An unexpected error occurred.";
+        errorBanner.classList.remove("hidden");
+        errorBanner.scrollIntoView({ behavior: "smooth", block: "nearest" });
+    }
+
+    function clearError() {
+        errorBanner.classList.add("hidden");
+        errorMessage.textContent = "";
+    }
+
+    if (errorDismissBtn) {
+        errorDismissBtn.addEventListener("click", clearError);
+    }
+
+    // ------------------------------------------------------------------------
+    // SECTION 2: FETCH & RENDER /api/sample
+    // ------------------------------------------------------------------------
+    async function loadSampleCards() {
+        const container = document.getElementById("sample-cards-container");
+        if (!container) return;
+
+        try {
+            const res = await fetch("/api/sample");
+            if (!res.ok) throw new Error("Failed to load sample scenarios");
+            const data = await res.json();
+
+            const lease = data.risky_lease_clause;
+            const comp = data.comparison_difference;
+
+            container.innerHTML = `
+                <!-- Sample Card 1: Risk Flag Example -->
+                <div class="flex flex-col justify-between border border-slate-200 rounded-xl p-5 bg-slate-50 hover:bg-white hover:shadow-md transition-all space-y-4">
+                    <div class="space-y-3">
+                        <div class="flex items-center justify-between gap-2">
+                            <span class="text-xs font-semibold text-slate-500 uppercase tracking-wide">Sample Risk Flag</span>
+                            <span class="badge badge-high text-xs">${lease.risk_level.toUpperCase()} RISK</span>
+                        </div>
+                        <h4 class="font-display font-semibold text-base text-primary">${lease.title}</h4>
+                        <!-- Serif quoted excerpt -->
+                        <div class="excerpt text-xs sm:text-sm">
+                            "${lease.clause_text.substring(0, 180)}..."
+                        </div>
+                        <div class="text-xs text-slate-700 bg-amber-50/80 p-3 rounded-lg border border-amber-200/60 leading-relaxed">
+                            <strong class="text-amber-900">Plain-English Translation:</strong> ${lease.plain_english_summary}
+                        </div>
+                    </div>
+                    <div class="pt-2 border-t border-slate-200/60 text-xs text-muted flex items-center justify-between">
+                        <span>Category: ${lease.category}</span>
+                        <span class="text-secondary font-medium">Auto-detected flag</span>
+                    </div>
+                </div>
+
+                <!-- Sample Card 2: Comparison Example -->
+                <div class="flex flex-col justify-between border border-slate-200 rounded-xl p-5 bg-slate-50 hover:bg-white hover:shadow-md transition-all space-y-4">
+                    <div class="space-y-3">
+                        <div class="flex items-center justify-between gap-2">
+                            <span class="text-xs font-semibold text-slate-500 uppercase tracking-wide">Sample Comparison</span>
+                            <span class="badge badge-medium text-xs">DIFFERS</span>
+                        </div>
+                        <h4 class="font-display font-semibold text-base text-primary">${comp.title}</h4>
+                        
+                        <!-- Side-by-side excerpts with differs indicator -->
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs relative">
+                            <div class="p-2.5 rounded bg-white border border-slate-200 font-serif italic text-slate-700">
+                                <span class="block font-sans not-italic font-bold text-[10px] text-slate-400 mb-1">DOC A</span>
+                                "${comp.differing_terms[0].doc_a_says}"
+                            </div>
+                            <div class="p-2.5 rounded bg-amber-50/70 border border-amber-200 font-serif italic text-slate-800">
+                                <span class="block font-sans not-italic font-bold text-[10px] text-amber-700 mb-1">DOC B (REDLINE)</span>
+                                "${comp.differing_terms[0].doc_b_says}"
+                            </div>
+                        </div>
+
+                        <div class="text-xs text-slate-700 bg-blue-50/70 p-3 rounded-lg border border-blue-200/60 leading-relaxed">
+                            <strong class="text-primary">Key Difference:</strong> ${comp.key_discussion_points[0]}
+                        </div>
+                    </div>
+                    <div class="pt-2 border-t border-slate-200/60 text-xs text-muted flex items-center justify-between">
+                        <span>Topic: ${comp.topic}</span>
+                        <span class="text-secondary font-medium">${comp.differing_terms[0].favors}</span>
+                    </div>
+                </div>
+            `;
+        } catch (err) {
+            container.innerHTML = `
+                <div class="col-span-2 text-center text-xs text-muted py-4">
+                    Preview scenarios currently unavailable.
+                </div>
+            `;
+        }
+    }
+    loadSampleCards();
+
+    // ------------------------------------------------------------------------
+    // SECTION 3: MODE TABS (Analyze vs. Compare)
+    // ------------------------------------------------------------------------
+    function switchTab(mode) {
+        clearError();
+        if (mode === "analyze") {
+            tabAnalyze.className = "w-full sm:w-auto px-6 py-3.5 rounded-xl font-semibold text-sm sm:text-base flex items-center justify-center gap-2.5 transition-all shadow-sm bg-primary text-white";
+            tabAnalyze.setAttribute("aria-selected", "true");
+            tabCompare.className = "w-full sm:w-auto px-6 py-3.5 rounded-xl font-semibold text-sm sm:text-base flex items-center justify-center gap-2.5 transition-all border border-slate-300 bg-white text-slate-700 hover:bg-slate-50";
+            tabCompare.setAttribute("aria-selected", "false");
+
+            panelAnalyze.classList.remove("hidden");
+            panelCompare.classList.add("hidden");
+        } else {
+            tabCompare.className = "w-full sm:w-auto px-6 py-3.5 rounded-xl font-semibold text-sm sm:text-base flex items-center justify-center gap-2.5 transition-all shadow-sm bg-primary text-white";
+            tabCompare.setAttribute("aria-selected", "true");
+            tabAnalyze.className = "w-full sm:w-auto px-6 py-3.5 rounded-xl font-semibold text-sm sm:text-base flex items-center justify-center gap-2.5 transition-all border border-slate-300 bg-white text-slate-700 hover:bg-slate-50";
+            tabAnalyze.setAttribute("aria-selected", "false");
+
+            panelCompare.classList.remove("hidden");
+            panelAnalyze.classList.add("hidden");
+        }
+    }
+
+    tabAnalyze.addEventListener("click", () => switchTab("analyze"));
+    tabCompare.addEventListener("click", () => switchTab("compare"));
+
+    // ------------------------------------------------------------------------
+    // SECTION 4a: ANALYZE UPLOAD HANDLERS
+    // ------------------------------------------------------------------------
+    function setAnalyzeFile(file) {
+        if (!file) return;
+        clearError();
+        selectedAnalyzeFile = file;
+        analyzeFilename.textContent = file.name;
+        analyzeFilesize.textContent = formatBytes(file.size);
+        analyzeFileInfo.classList.remove("hidden");
+        analyzeFileInfo.classList.add("flex");
+        analyzeActionContainer.classList.remove("hidden");
+    }
+
+    function clearAnalyzeFile() {
+        selectedAnalyzeFile = null;
+        analyzeFileInput.value = "";
+        analyzeFileInfo.classList.add("hidden");
+        analyzeFileInfo.classList.remove("flex");
+        analyzeActionContainer.classList.add("hidden");
+    }
+
+    analyzeDropzone.addEventListener("click", () => analyzeFileInput.click());
+    analyzeDropzone.addEventListener("keydown", (e) => {
+        if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
+            analyzeFileInput.click();
+        }
+    });
+
+    analyzeFileInput.addEventListener("change", () => {
+        if (analyzeFileInput.files && analyzeFileInput.files[0]) {
+            setAnalyzeFile(analyzeFileInput.files[0]);
+        }
+    });
+
+    analyzeRemoveFile.addEventListener("click", clearAnalyzeFile);
+
+    // Drag-and-drop for Analyze
+    ["dragenter", "dragover"].forEach(evt => {
+        analyzeDropzone.addEventListener(evt, (e) => {
+            e.preventDefault();
+            analyzeDropzone.classList.add("dragover");
+        });
+    });
+    ["dragleave", "drop"].forEach(evt => {
+        analyzeDropzone.addEventListener(evt, (e) => {
+            e.preventDefault();
+            analyzeDropzone.classList.remove("dragover");
+        });
+    });
+    analyzeDropzone.addEventListener("drop", (e) => {
+        if (e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0]) {
+            setAnalyzeFile(e.dataTransfer.files[0]);
+        }
+    });
+
+    // ------------------------------------------------------------------------
+    // SECTION 4b: COMPARE UPLOAD HANDLERS
+    // ------------------------------------------------------------------------
+    function updateCompareUI() {
+        if (selectedCompareFileA && selectedCompareFileB) {
+            compareActionContainer.classList.remove("hidden");
+        } else {
+            compareActionContainer.classList.add("hidden");
+        }
+    }
+
+    compareDropzoneA.addEventListener("click", () => compareFileInputA.click());
+    compareDropzoneA.addEventListener("keydown", (e) => {
+        if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
+            compareFileInputA.click();
+        }
+    });
+    compareFileInputA.addEventListener("change", () => {
+        if (compareFileInputA.files && compareFileInputA.files[0]) {
+            selectedCompareFileA = compareFileInputA.files[0];
+            docALabel.textContent = selectedCompareFileA.name;
+            docAStatus.textContent = "Ready (" + formatBytes(selectedCompareFileA.size) + ")";
+            docAStatus.className = "text-success font-semibold";
+            updateCompareUI();
+        }
+    });
+
+    compareDropzoneB.addEventListener("click", () => compareFileInputB.click());
+    compareDropzoneB.addEventListener("keydown", (e) => {
+        if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
+            compareFileInputB.click();
+        }
+    });
+    compareFileInputB.addEventListener("change", () => {
+        if (compareFileInputB.files && compareFileInputB.files[0]) {
+            selectedCompareFileB = compareFileInputB.files[0];
+            docBLabel.textContent = selectedCompareFileB.name;
+            docBStatus.textContent = "Ready (" + formatBytes(selectedCompareFileB.size) + ")";
+            docBStatus.className = "text-success font-semibold";
+            updateCompareUI();
+        }
+    });
+
+    // Drag-and-drop for Compare
+    [compareDropzoneA, compareDropzoneB].forEach(zone => {
+        ["dragenter", "dragover"].forEach(evt => {
+            zone.addEventListener(evt, (e) => {
+                e.preventDefault();
+                zone.classList.add("dragover");
+            });
+        });
+        ["dragleave", "drop"].forEach(evt => {
+            zone.addEventListener(evt, (e) => {
+                e.preventDefault();
+                zone.classList.remove("dragover");
+            });
+        });
+    });
+
+    compareDropzoneA.addEventListener("drop", (e) => {
+        if (e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0]) {
+            selectedCompareFileA = e.dataTransfer.files[0];
+            docALabel.textContent = selectedCompareFileA.name;
+            docAStatus.textContent = "Ready (" + formatBytes(selectedCompareFileA.size) + ")";
+            docAStatus.className = "text-success font-semibold";
+            updateCompareUI();
+        }
+    });
+
+    compareDropzoneB.addEventListener("drop", (e) => {
+        if (e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0]) {
+            selectedCompareFileB = e.dataTransfer.files[0];
+            docBLabel.textContent = selectedCompareFileB.name;
+            docBStatus.textContent = "Ready (" + formatBytes(selectedCompareFileB.size) + ")";
+            docBStatus.className = "text-success font-semibold";
+            updateCompareUI();
+        }
+    });
+
+    // ------------------------------------------------------------------------
+    // SECTION 5: PROCESSING STATE ROTATOR
+    // ------------------------------------------------------------------------
+    function startProcessing() {
+        clearError();
+        resultsSection.classList.add("hidden");
+        resultsSection.innerHTML = "";
+        processingState.classList.remove("hidden");
+        processingState.scrollIntoView({ behavior: "smooth", block: "center" });
+
+        let stepIndex = 0;
+        processingMessage.textContent = processingSteps[0];
+        processingInterval = setInterval(() => {
+            stepIndex = (stepIndex + 1) % processingSteps.length;
+            processingMessage.textContent = processingSteps[stepIndex];
+        }, 2200);
+    }
+
+    function stopProcessing() {
+        if (processingInterval) {
+            clearInterval(processingInterval);
+            processingInterval = null;
+        }
+        processingState.classList.add("hidden");
+    }
+
+    // ------------------------------------------------------------------------
+    // SECTION 6: INLINE RESULT RENDERING
+    // ------------------------------------------------------------------------
+    function renderAnalyzeResults(data) {
+        currentJobId = data.job_id;
+        const res = data.result || {};
+        const meta = res.metadata || {};
+        const clauses = res.clauses || [];
+        const checklist = res.checklist || [];
+        const riskSummary = data.risk_summary || meta.risk_counts || {};
+
+        const totalClauses = meta.total_clauses || clauses.length || 0;
+        const highCount = riskSummary.high_risk_count !== undefined ? riskSummary.high_risk_count : (meta.risk_counts ? meta.risk_counts.high : 0);
+        const medCount = riskSummary.medium_risk_count !== undefined ? riskSummary.medium_risk_count : (meta.risk_counts ? meta.risk_counts.medium : 0);
+        const lowCount = riskSummary.low_risk_count !== undefined ? riskSummary.low_risk_count : (meta.risk_counts ? meta.risk_counts.low : 0);
+
+        const overallLabel = meta.overall_label || "Standard Commercial Terms";
+        const docType = meta.doc_type || "Legal Agreement";
+
+        let clausesHtml = "";
+        clauses.forEach((c, idx) => {
+            const riskInfo = c.risk || {};
+            const riskLevel = (riskInfo.level || "low").toLowerCase();
+            const badgeClass = riskLevel === "high" ? "badge-high" : (riskLevel === "medium" ? "badge-medium" : "badge-low");
+            const badgeLabel = riskLevel === "high" ? "High Risk" : (riskLevel === "medium" ? "Worth Reviewing" : "Standard");
+            const flags = riskInfo.flags || [];
+
+            clausesHtml += `
+                <div class="border border-slate-200 rounded-xl overflow-hidden bg-white shadow-sm transition-all hover:border-slate-300">
+                    <button type="button" aria-expanded="false" aria-controls="clause-body-${idx}"
+                            onclick="window.toggleClauseCard(${idx})"
+                            class="w-full text-left p-4 sm:p-5 flex items-start sm:items-center justify-between gap-4 focus:outline-none focus:bg-slate-50 transition-colors">
+                        <div class="space-y-1 flex-1 min-w-0">
+                            <div class="flex flex-wrap items-center gap-2">
+                                <span class="px-2 py-0.5 rounded text-[11px] font-semibold bg-blue-50 text-secondary border border-blue-200">
+                                    ${c.category || "General"}
+                                </span>
+                                <span class="badge ${badgeClass} text-[10px]">
+                                    ${badgeLabel}
+                                </span>
+                                <span class="text-xs text-muted font-medium">Section ${idx + 1}</span>
+                            </div>
+                            <h4 class="font-display font-semibold text-base sm:text-lg text-primary truncate">
+                                ${c.title || `Clause ${idx + 1}`}
+                            </h4>
+                            <p class="text-xs sm:text-sm text-slate-600 line-clamp-2">
+                                ${c.plain_english || "No summary available."}
+                            </p>
+                        </div>
+                        <div class="text-slate-400 font-bold text-lg px-2 flex-shrink-0" id="clause-icon-${idx}">
+                            +
+                        </div>
+                    </button>
+
+                    <!-- Expandable Body -->
+                    <div id="clause-body-${idx}" class="hidden p-4 sm:p-6 bg-slate-50 border-t border-slate-200 space-y-4 text-xs sm:text-sm">
+                        <!-- Quoted Serif Excerpt -->
+                        <div class="space-y-1">
+                            <span class="text-xs font-semibold text-slate-500 uppercase tracking-wide">Original Contract Text Excerpt</span>
+                            <div class="excerpt">
+                                "${c.text || ""}"
+                            </div>
+                        </div>
+
+                        ${flags.length > 0 ? `
+                            <div class="p-3 bg-red-50 border border-red-200 rounded-lg text-red-900 space-y-1">
+                                <strong class="font-semibold text-xs text-red-950 uppercase tracking-wide">Risk Reasoning / Warning Flags:</strong>
+                                <ul class="list-disc list-inside space-y-0.5 text-xs">
+                                    ${flags.map(f => `<li>${f}</li>`).join("")}
+                                </ul>
+                            </div>
+                        ` : ''}
+                    </div>
+                </div>
+            `;
+        });
+
+        let checklistHtml = "";
+        if (checklist.length > 0) {
+            checklistHtml = checklist.map((item, idx) => `
+                <li class="flex items-start gap-3 p-3 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 transition-colors cursor-pointer"
+                    onclick="this.classList.toggle('opacity-50'); this.querySelector('span.checklist-text').classList.toggle('line-through');">
+                    <input type="checkbox" id="check-${idx}" aria-label="Toggle item ${idx + 1}" class="mt-1 h-4 w-4 rounded text-accent focus:ring-accent cursor-pointer">
+                    <div class="flex-1">
+                        <span class="checklist-text text-sm font-medium text-slate-800">
+                            <strong>[${item.priority || 'Review'}]</strong> ${item.action_item || item.concern || ''}
+                        </span>
+                        ${item.concern ? `<p class="text-xs text-muted mt-0.5">Concern: ${item.concern}</p>` : ''}
+                    </div>
+                </li>
+            `).join("");
+        } else {
+            checklistHtml = `<li class="text-xs text-muted">No specific urgent action items identified for this document.</li>`;
+        }
+
+        resultsSection.innerHTML = `
+            <div class="space-y-8 animate-fade-up">
+
+                <!-- 1. Document Overview Card -->
+                <div class="bg-white rounded-2xl border border-slate-200 p-6 sm:p-8 shadow-sm space-y-4">
+                    <div class="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 pb-4">
+                        <div class="flex items-center gap-2">
+                            <span class="px-3 py-1 rounded-full text-xs font-semibold bg-primary text-white">
+                                ${docType}
+                            </span>
+                            <span class="text-xs text-muted font-medium">Analysis Completed</span>
+                        </div>
+                        <div class="text-xs text-slate-500">
+                            Job ID: <code class="bg-slate-100 px-2 py-0.5 rounded text-slate-700 font-mono">${currentJobId}</code>
+                        </div>
+                    </div>
+                    <div class="space-y-2">
+                        <h3 class="font-display text-2xl font-bold text-primary">${overallLabel}</h3>
+                        <p class="text-sm sm:text-base text-slate-700 leading-relaxed">
+                            ClauseWise identified <strong>${totalClauses} clauses</strong> in this document. 
+                            ${highCount > 0 ? `<span class="text-red-700 font-medium">Found ${highCount} high-risk provisions requiring close legal scrutiny before signing.</span>` : `All examined provisions reflect standard commercial terms.`}
+                        </p>
+                    </div>
+                </div>
+
+                <!-- 2. Risk Summary Stat Cards -->
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 text-center">
+                    <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
+                        <span class="text-xs font-semibold text-slate-500 uppercase tracking-wide">Total Clauses</span>
+                        <p class="text-3xl font-display font-bold text-primary mt-1">${totalClauses}</p>
+                    </div>
+                    <div class="bg-red-50 p-5 rounded-xl border border-red-200 shadow-sm">
+                        <span class="text-xs font-semibold text-red-700 uppercase tracking-wide">High Risk</span>
+                        <p class="text-3xl font-display font-bold text-red-800 mt-1">${highCount}</p>
+                    </div>
+                    <div class="bg-amber-50 p-5 rounded-xl border border-amber-200 shadow-sm">
+                        <span class="text-xs font-semibold text-amber-800 uppercase tracking-wide">Medium Risk</span>
+                        <p class="text-3xl font-display font-bold text-amber-900 mt-1">${medCount}</p>
+                    </div>
+                    <div class="bg-green-50 p-5 rounded-xl border border-green-200 shadow-sm">
+                        <span class="text-xs font-semibold text-green-700 uppercase tracking-wide">Low Risk</span>
+                        <p class="text-3xl font-display font-bold text-green-800 mt-1">${lowCount}</p>
+                    </div>
+                </div>
+
+                <!-- 3. Clause List (Expandable Cards) -->
+                <div class="space-y-4">
+                    <div class="flex items-center justify-between">
+                        <h3 class="font-display text-xl font-bold text-primary">Clause-by-Clause Breakdown</h3>
+                        <span class="text-xs text-muted">Click any clause to expand excerpt</span>
+                    </div>
+                    <div class="space-y-3 max-h-[600px] overflow-y-auto pr-1">
+                        ${clausesHtml}
+                    </div>
+                </div>
+
+                <!-- 4. Action Checklist & Questions to Ask a Lawyer -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <!-- Action Checklist -->
+                    <div class="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm space-y-4">
+                        <div class="flex items-center gap-2 border-b border-slate-100 pb-3">
+                            <span class="text-lg">📋</span>
+                            <h4 class="font-display font-semibold text-lg text-primary">Action Checklist</h4>
+                        </div>
+                        <p class="text-xs text-muted">Click items to mark them as addressed prior to consultation.</p>
+                        <ul class="space-y-2">
+                            ${checklistHtml}
+                        </ul>
+                    </div>
+
+                    <!-- Questions for Lawyer -->
+                    <div class="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm space-y-4">
+                        <div class="flex items-center gap-2 border-b border-slate-100 pb-3">
+                            <span class="text-lg">❓</span>
+                            <h4 class="font-display font-semibold text-lg text-primary">Questions to Ask a Lawyer</h4>
+                        </div>
+                        <p class="text-xs text-muted">Key conversation points formulated from identified risks:</p>
+                        <ol class="space-y-2.5 list-decimal list-inside text-xs sm:text-sm text-slate-800">
+                            <li class="p-2.5 rounded-lg bg-slate-50 border border-slate-200">
+                                <span>Can we add a reciprocal mutual cap on liability and indemnification?</span>
+                            </li>
+                            <li class="p-2.5 rounded-lg bg-slate-50 border border-slate-200">
+                                <span>Does the automatic renewal timeline require affirmative written notice rather than rolling over automatically?</span>
+                            </li>
+                            <li class="p-2.5 rounded-lg bg-slate-50 border border-slate-200">
+                                <span>Are dispute resolution costs and mandatory arbitration venues fair and proportionate for our company?</span>
+                            </li>
+                        </ol>
+                    </div>
+                </div>
+
+                <!-- 6. Ask-A-Question Box (Grounded Follow-up) -->
+                <div class="bg-slate-50 rounded-2xl border border-slate-200 p-6 sm:p-8 space-y-4 shadow-sm">
+                    <div class="space-y-1">
+                        <h4 class="font-display text-xl font-bold text-primary flex items-center gap-2">
+                            <span>💬</span> Ask about this document
+                        </h4>
+                        <p class="text-xs sm:text-sm text-muted">Ask questions directly grounded on the parsed clauses (max 300 chars).</p>
+                    </div>
+
+                    <form id="ask-form" class="flex flex-col sm:flex-row gap-3">
+                        <input type="text" id="ask-input" maxlength="300" placeholder="e.g. What are my obligations if I want to terminate early?"
+                               aria-label="Ask a question about this document"
+                               class="flex-1 rounded-xl border border-slate-300 px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-accent bg-white">
+                        <button type="submit" id="ask-submit-btn" aria-label="Send question"
+                                class="px-6 py-3 rounded-xl font-semibold text-sm text-white bg-primary hover:bg-[#162c47] focus:outline-none focus:ring-2 focus:ring-accent transition-colors flex items-center justify-center gap-2">
+                            <span>Send</span> →
+                        </button>
+                    </form>
+
+                    <!-- Running Q&A List -->
+                    <div id="qa-container" class="space-y-3 pt-2"></div>
+                </div>
+
+                <!-- 7. Bottom Legal Disclaimer -->
+                <div class="p-4 rounded-xl bg-amber-50 border border-amber-200 text-amber-900 text-xs text-center space-y-1">
+                    <p class="font-semibold">Important Legal Notice</p>
+                    <p>${data.disclaimer || "ClauseWise provides automated informational assistance and does not provide formal legal advice. Always consult a licensed attorney."}</p>
+                </div>
+
+            </div>
+        `;
+
+        // Attach Ask form listener
+        const askForm = document.getElementById("ask-form");
+        const askInput = document.getElementById("ask-input");
+        const qaContainer = document.getElementById("qa-container");
+
+        askForm.addEventListener("submit", async (e) => {
+            e.preventDefault();
+            const question = askInput.value.trim();
+            if (!question) return;
+
+            const tempId = "qa-" + Date.now();
+            qaContainer.insertAdjacentHTML("afterbegin", `
+                <div id="${tempId}" class="p-4 rounded-xl bg-white border border-slate-200 space-y-2 animate-fade-up">
+                    <p class="font-semibold text-xs sm:text-sm text-primary">Q: ${escapeHtml(question)}</p>
+                    <p class="text-xs sm:text-sm text-muted flex items-center gap-2">
+                        <span class="status-dot-pulse"></span> Answering based on document context...
+                    </p>
+                </div>
+            `);
+            askInput.value = "";
+
+            try {
+                const res = await fetch("/api/ask", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ job_id: currentJobId, question: question })
+                });
+                const resData = await res.json();
+                const card = document.getElementById(tempId);
+                if (card) {
+                    if (res.ok && resData.answer) {
+                        card.innerHTML = `
+                            <p class="font-semibold text-xs sm:text-sm text-primary">Q: ${escapeHtml(question)}</p>
+                            <p class="text-xs sm:text-sm text-slate-800 whitespace-pre-line leading-relaxed">A: ${escapeHtml(resData.answer)}</p>
+                        `;
+                    } else {
+                        card.innerHTML = `
+                            <p class="font-semibold text-xs sm:text-sm text-primary">Q: ${escapeHtml(question)}</p>
+                            <p class="text-xs sm:text-sm text-red-600">Error: ${escapeHtml(resData.error || "Unable to answer question.")}</p>
+                        `;
+                    }
+                }
+            } catch (err) {
+                const card = document.getElementById(tempId);
+                if (card) {
+                    card.innerHTML = `
+                        <p class="font-semibold text-xs sm:text-sm text-primary">Q: ${escapeHtml(question)}</p>
+                        <p class="text-xs sm:text-sm text-red-600">Failed to connect to answer service.</p>
+                    `;
+                }
+            }
+        });
+
+        resultsSection.classList.remove("hidden");
+        resultsSection.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+
+    function renderCompareResults(data) {
+        currentJobId = data.job_id;
+        const res = data.result || {};
+        const metrics = data.metrics || {};
+        const differing = res.differing_terms || [];
+        const missingA = res.missing_in_a || [];
+        const missingB = res.missing_in_b || [];
+        const discussionPoints = res.key_discussion_points || [];
+
+        let differingHtml = "";
+        differing.forEach((d, idx) => {
+            differingHtml += `
+                <div class="bg-white rounded-xl border border-slate-200 p-5 shadow-sm space-y-3">
+                    <div class="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 pb-2">
+                        <span class="font-display font-semibold text-base text-primary">${d.topic || `Difference ${idx + 1}`}</span>
+                        <div class="flex items-center gap-2">
+                            <span class="badge ${d.significance === 'High' ? 'badge-high' : 'badge-medium'} text-[10px]">${d.significance || 'Differs'}</span>
+                            <span class="text-xs font-semibold text-secondary">${d.favors || ''}</span>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs sm:text-sm">
+                        <div class="p-3 bg-slate-50 rounded-lg border border-slate-200 space-y-1">
+                            <span class="font-semibold text-[11px] text-slate-500 uppercase tracking-wide">Document A Says:</span>
+                            <p class="font-serif italic text-slate-800">"${d.doc_a_says || 'Not specified'}"</p>
+                        </div>
+                        <div class="p-3 bg-amber-50/60 rounded-lg border border-amber-200 space-y-1">
+                            <span class="font-semibold text-[11px] text-amber-800 uppercase tracking-wide">Document B Says:</span>
+                            <p class="font-serif italic text-slate-900">"${d.doc_b_says || 'Not specified'}"</p>
+                        </div>
+                    </div>
+                </div>
+            `;
+        });
+
+        resultsSection.innerHTML = `
+            <div class="space-y-8 animate-fade-up">
+
+                <!-- 1. Comparison Header -->
+                <div class="bg-white rounded-2xl border border-slate-200 p-6 sm:p-8 shadow-sm space-y-4">
+                    <div class="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 pb-3">
+                        <div class="flex items-center gap-2">
+                            <span class="px-3 py-1 rounded-full text-xs font-semibold bg-accent text-white">Comparison Complete</span>
+                            <span class="text-xs text-muted">Version Comparison</span>
+                        </div>
+                        <div class="text-xs text-slate-500">
+                            Job ID: <code class="bg-slate-100 px-2 py-0.5 rounded text-slate-700 font-mono">${currentJobId}</code>
+                        </div>
+                    </div>
+                    <h3 class="font-display text-2xl font-bold text-primary">
+                        ${res.doc_a_type || 'Document A'} vs. ${res.doc_b_type || 'Document B'}
+                    </h3>
+                    <p class="text-sm sm:text-base text-slate-700 leading-relaxed">
+                        ${res.overall_comparison || 'Comparison analysis complete. Detailed terms and omissions are highlighted below.'}
+                    </p>
+                </div>
+
+                <!-- 2. Metrics Stat Row -->
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 text-center">
+                    <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
+                        <span class="text-xs font-semibold text-slate-500 uppercase tracking-wide">Total Differences</span>
+                        <p class="text-3xl font-display font-bold text-primary mt-1">${metrics.total_differences || differing.length}</p>
+                    </div>
+                    <div class="bg-red-50 p-5 rounded-xl border border-red-200 shadow-sm">
+                        <span class="text-xs font-semibold text-red-700 uppercase tracking-wide">High Significance</span>
+                        <p class="text-3xl font-display font-bold text-red-800 mt-1">${metrics.high_significance_count || 0}</p>
+                    </div>
+                    <div class="bg-amber-50 p-5 rounded-xl border border-amber-200 shadow-sm">
+                        <span class="text-xs font-semibold text-amber-800 uppercase tracking-wide">Differing Terms</span>
+                        <p class="text-3xl font-display font-bold text-amber-900 mt-1">${metrics.differing_terms_count || differing.length}</p>
+                    </div>
+                    <div class="bg-slate-50 p-5 rounded-xl border border-slate-200 shadow-sm">
+                        <span class="text-xs font-semibold text-slate-600 uppercase tracking-wide">Missing Clauses</span>
+                        <p class="text-3xl font-display font-bold text-slate-800 mt-1">${metrics.missing_clauses_count || (missingA.length + missingB.length)}</p>
+                    </div>
+                </div>
+
+                <!-- 3. Missing Clauses (Two Columns) -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="bg-white rounded-xl border border-slate-200 p-5 shadow-sm space-y-3">
+                        <h4 class="font-display font-semibold text-base text-primary flex items-center justify-between">
+                            <span>Missing in Document A</span>
+                            <span class="text-xs text-muted">(${missingA.length})</span>
+                        </h4>
+                        ${missingA.length > 0 ? `
+                            <ul class="space-y-2 text-xs">
+                                ${missingA.map(m => `
+                                    <li class="p-2.5 rounded bg-slate-50 border border-slate-200">
+                                        <strong>${m.topic || 'Clause'}:</strong> ${m.found_in_b || ''}
+                                    </li>
+                                `).join("")}
+                            </ul>
+                        ` : `<p class="text-xs text-muted">No clauses missing from Document A.</p>`}
+                    </div>
+
+                    <div class="bg-white rounded-xl border border-slate-200 p-5 shadow-sm space-y-3">
+                        <h4 class="font-display font-semibold text-base text-primary flex items-center justify-between">
+                            <span>Missing in Document B</span>
+                            <span class="text-xs text-muted">(${missingB.length})</span>
+                        </h4>
+                        ${missingB.length > 0 ? `
+                            <ul class="space-y-2 text-xs">
+                                ${missingB.map(m => `
+                                    <li class="p-2.5 rounded bg-slate-50 border border-slate-200">
+                                        <strong>${m.topic || 'Clause'}:</strong> ${m.found_in_a || ''}
+                                    </li>
+                                `).join("")}
+                            </ul>
+                        ` : `<p class="text-xs text-muted">No clauses missing from Document B.</p>`}
+                    </div>
+                </div>
+
+                <!-- 4. Differing Terms Section -->
+                <div class="space-y-4">
+                    <h3 class="font-display text-xl font-bold text-primary">Differing Terms</h3>
+                    <div class="space-y-4">
+                        ${differingHtml || `<p class="text-xs text-muted">No differing terms detected between versions.</p>`}
+                    </div>
+                </div>
+
+                <!-- 5. Key Discussion Points -->
+                ${discussionPoints.length > 0 ? `
+                    <div class="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm space-y-3">
+                        <h4 class="font-display font-semibold text-lg text-primary">Key Discussion Points</h4>
+                        <ol class="space-y-2 list-decimal list-inside text-xs sm:text-sm text-slate-800">
+                            ${discussionPoints.map(pt => `<li class="p-2.5 rounded bg-slate-50 border border-slate-200">${pt}</li>`).join("")}
+                        </ol>
+                    </div>
+                ` : ''}
+
+                <!-- Disclaimer -->
+                <div class="p-4 rounded-xl bg-amber-50 border border-amber-200 text-amber-900 text-xs text-center space-y-1">
+                    <p class="font-semibold">Comparative Analysis Disclaimer</p>
+                    <p>${data.disclaimer || "ClauseWise comparison is an automated tool and does not provide legal advice regarding which agreement to sign."}</p>
+                </div>
+
+            </div>
+        `;
+
+        resultsSection.classList.remove("hidden");
+        resultsSection.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+
+    // Toggle Clause Details Card
+    window.toggleClauseCard = function (idx) {
+        const body = document.getElementById(`clause-body-${idx}`);
+        const icon = document.getElementById(`clause-icon-${idx}`);
+        const btn = body ? body.previousElementSibling : null;
+        if (body) {
+            const isHidden = body.classList.contains("hidden");
+            if (isHidden) {
+                body.classList.remove("hidden");
+                if (icon) icon.textContent = "−";
+                if (btn) btn.setAttribute("aria-expanded", "true");
+            } else {
+                body.classList.add("hidden");
+                if (icon) icon.textContent = "+";
+                if (btn) btn.setAttribute("aria-expanded", "false");
+            }
+        }
+    };
+
+    function escapeHtml(str) {
+        if (!str) return "";
+        return str.replace(/&/g, "&amp;")
+                  .replace(/</g, "&lt;")
+                  .replace(/>/g, "&gt;")
+                  .replace(/"/g, "&quot;")
+                  .replace(/'/g, "&#039;");
+    }
+
+    // ------------------------------------------------------------------------
+    // FORM SUBMISSION HANDLERS (Fetch API)
+    // ------------------------------------------------------------------------
+    analyzeForm.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        if (!selectedAnalyzeFile) {
+            showError("Please select or drop a valid document file to analyze.");
+            return;
+        }
+
+        const formData = new FormData();
+        formData.append("file", selectedAnalyzeFile);
+
+        startProcessing();
+
+        try {
+            const res = await fetch("/api/analyze", {
+                method: "POST",
+                body: formData
+            });
+            const data = await res.json();
+
+            stopProcessing();
+
+            if (!res.ok) {
+                showError(data.error || "Analysis failed. Please try again.");
+                return;
+            }
+
+            renderAnalyzeResults(data);
+
+        } catch (err) {
+            stopProcessing();
+            showError("Failed to communicate with analysis server: " + err.message);
+        }
+    });
+
+    compareForm.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        if (!selectedCompareFileA || !selectedCompareFileB) {
+            showError("Please select both Document A and Document B to compare.");
+            return;
+        }
+
+        const formData = new FormData();
+        formData.append("file_a", selectedCompareFileA);
+        formData.append("file_b", selectedCompareFileB);
+
+        startProcessing();
+
+        try {
+            const res = await fetch("/api/compare", {
+                method: "POST",
+                body: formData
+            });
+            const data = await res.json();
+
+            stopProcessing();
+
+            if (!res.ok) {
+                showError(data.error || "Document comparison failed. Please try again.");
+                return;
+            }
+
+            renderCompareResults(data);
+
+        } catch (err) {
+            stopProcessing();
+            showError("Failed to communicate with comparison server: " + err.message);
+        }
+    });
+
+})();
+</script>
+{% endblock %}

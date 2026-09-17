@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="ClauseWise - AI-powered legal document assistant helping you understand contracts, detect risks, and prepare questions for legal counsel.">
+    <title>{% block title %}ClauseWise - AI-Powered Legal Document Assistant{% endblock %}</title>
+
+    <!-- Google Fonts CDN: Lora (headings/trust) and Inter (body/modern) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Lora:ital,wght@0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
+
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: "#1E3A5F",
+                        secondary: "#3B6EA5",
+                        accent: "#0EA5A5",
+                        success: "#16A34A",
+                        warning: "#D97706",
+                        danger: "#DC2626",
+                        surface: "#FFFFFF",
+                        paper: "#F8FAFC",
+                        ink: "#1E293B",
+                        muted: "#64748B"
+                    },
+                    fontFamily: {
+                        display: ["Lora", "Georgia", "serif"],
+                        body: ["Inter", "-apple-system", "BlinkMacSystemFont", "sans-serif"]
+                    }
+                }
+            }
+        }
+    </script>
+
+    <!-- Custom CSS Stylesheet for ClauseWise Design System -->
+    <style>
+        :root {
+            --color-primary: #1E3A5F;
+            --color-secondary: #3B6EA5;
+            --color-accent: #0EA5A5;
+            --color-success: #16A34A;
+            --color-warning: #D97706;
+            --color-danger: #DC2626;
+            --color-surface: #FFFFFF;
+            --color-paper: #F8FAFC;
+            --color-ink: #1E293B;
+            --color-muted: #64748B;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            color: #1E293B;
+            background-color: #F8FAFC;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        h1, h2, h3, h4, .font-display {
+            font-family: 'Lora', Georgia, serif;
+        }
+
+        /* Skip to main content link for keyboard accessibility */
+        .skip-link {
+            position: absolute;
+            top: -999px;
+            left: 1rem;
+            background: #1E3A5F;
+            color: #FFFFFF;
+            padding: 0.75rem 1.25rem;
+            border-radius: 0.375rem;
+            font-weight: 600;
+            z-index: 9999;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            text-decoration: none;
+            transition: top 0.2s ease;
+        }
+        .skip-link:focus {
+            top: 1rem;
+        }
+
+        /* Fade-up card animation */
+        @keyframes fadeUp {
+            from {
+                opacity: 0;
+                transform: translateY(16px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        .animate-fade-up, .card-fade-up {
+            animation: fadeUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        /* Striped animated progress bar for processing state */
+        @keyframes progressStripes {
+            from { background-position: 40px 0; }
+            to { background-position: 0 0; }
+        }
+        .progress-bar-striped {
+            background-image: linear-gradient(
+                45deg,
+                rgba(255, 255, 255, 0.25) 25%,
+                transparent 25%,
+                transparent 50%,
+                rgba(255, 255, 255, 0.25) 50%,
+                rgba(255, 255, 255, 0.25) 75%,
+                transparent 75%,
+                transparent
+            );
+            background-size: 40px 40px;
+            animation: progressStripes 1s linear infinite;
+        }
+
+        /* Status pulse dot for processing states */
+        @keyframes statusPulse {
+            0%, 100% {
+                opacity: 1;
+                transform: scale(1);
+            }
+            50% {
+                opacity: 0.4;
+                transform: scale(0.85);
+            }
+        }
+        .status-dot-pulse {
+            display: inline-block;
+            width: 0.625rem;
+            height: 0.625rem;
+            border-radius: 9999px;
+            background-color: #0EA5A5;
+            animation: statusPulse 1.4s ease-in-out infinite;
+        }
+
+        /* Risk badge pills - soft calm background tints */
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.375rem;
+            padding: 0.25rem 0.625rem;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            letter-spacing: 0.025em;
+            text-transform: uppercase;
+        }
+        .badge-high, .badge-risk-high {
+            background-color: #FEE2E2;
+            color: #991B1B;
+            border: 1px solid #FCA5A5;
+        }
+        .badge-medium, .badge-risk-medium {
+            background-color: #FEF3C7;
+            color: #92400E;
+            border: 1px solid #FCD34D;
+        }
+        .badge-low, .badge-risk-low {
+            background-color: #DCFCE7;
+            color: #166534;
+            border: 1px solid #86EFAC;
+        }
+
+        /* Confidence badge pills */
+        .badge-confidence-high {
+            background-color: #DCFCE7;
+            color: #166534;
+            border: 1px solid #86EFAC;
+        }
+        .badge-confidence-medium {
+            background-color: #FEF3C7;
+            color: #92400E;
+            border: 1px solid #FCD34D;
+        }
+        .badge-confidence-low {
+            background-color: #FEE2E2;
+            color: #991B1B;
+            border: 1px solid #FCA5A5;
+        }
+
+        /* File drop zone dragover state */
+        .dropzone, .drop-zone, #dropZone {
+            transition: all 0.2s ease-in-out;
+        }
+        .dropzone.dragover, .drop-zone.dragover, #dropZone.dragover {
+            border-color: #0EA5A5 !important;
+            border-style: dashed !important;
+            background-color: rgba(14, 165, 165, 0.06) !important;
+            transform: scale(1.01);
+        }
+
+        /* Mono font utility for original quoted legal excerpts */
+        .excerpt, .document-excerpt, .legal-excerpt, .font-legal-quote {
+            font-family: Georgia, 'Times New Roman', serif;
+            background: #F1F5F9;
+            padding: 8px 12px;
+            border-left: 3px solid #CBD5E1;
+            font-style: italic;
+            color: #334155;
+            border-radius: 0 4px 4px 0;
+            line-height: 1.6;
+        }
+
+        /* Diff styling */
+        ins.diff-ins {
+            background-color: rgba(22, 163, 74, 0.15);
+            color: #15803D;
+            text-decoration: none;
+            padding: 2px 4px;
+            border-radius: 3px;
+        }
+        del.diff-del {
+            background-color: rgba(220, 38, 38, 0.15);
+            color: #B91C1C;
+            text-decoration: line-through;
+            padding: 2px 4px;
+            border-radius: 3px;
+        }
+    </style>
+
+    {% block extra_head %}{% endblock %}
+</head>
+<body class="bg-paper text-ink min-h-screen flex flex-col font-body antialiased">
+
+    <!-- Accessibility: Skip to main content -->
+    <a href="#main-content" class="skip-link">Skip to main content</a>
+
+    <!-- Header Navigation -->
+    <header role="banner" class="sticky top-0 z-40 bg-white border-b border-slate-200 shadow-sm">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16 sm:h-20">
+                
+                <!-- Logo & Tagline -->
+                <a href="{{ url_for('index') }}" class="flex items-center gap-3 group text-decoration-none focus:outline-none focus:ring-2 focus:ring-accent rounded-lg p-1">
+                    <!-- Minimal Scale of Balance SVG Icon -->
+                    <div class="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center text-primary group-hover:bg-slate-200 transition-colors">
+                        <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <path d="M12 3v18"/>
+                            <path d="M6 7h12"/>
+                            <path d="m3 13 3-6 3 6a3 3 0 0 1-6 0Z"/>
+                            <path d="m15 13 3-6 3 6a3 3 0 0 1-6 0Z"/>
+                            <path d="M4 21h16"/>
+                        </svg>
+                    </div>
+                    <div>
+                        <span class="font-display text-2xl font-bold text-primary tracking-tight">Clause<span class="text-secondary">Wise</span></span>
+                        <p class="text-xs text-muted font-medium tracking-normal -mt-1 hidden sm:block">Understand before you sign</p>
+                    </div>
+                </a>
+
+                <!-- Navigation Links -->
+                <nav role="navigation" aria-label="Main navigation">
+                    <ul class="flex items-center space-x-1 sm:space-x-4">
+                        <li>
+                            <a href="{{ url_for('index') }}" class="px-3 py-2 rounded-md text-sm font-medium transition-colors {% if request.endpoint == 'index' or request.endpoint == 'analyze' %}text-primary bg-slate-100 font-semibold{% else %}text-slate-600 hover:text-primary hover:bg-slate-50{% endif %}">
+                                Analyze
+                            </a>
+                        </li>
+                        <li>
+                            <a href="{{ url_for('compare') }}" class="px-3 py-2 rounded-md text-sm font-medium transition-colors {% if request.endpoint == 'compare' %}text-primary bg-slate-100 font-semibold{% else %}text-slate-600 hover:text-primary hover:bg-slate-50{% endif %}">
+                                Compare
+                            </a>
+                        </li>
+                        <li>
+                            <a href="{{ url_for('about') }}" class="px-3 py-2 rounded-md text-sm font-medium transition-colors {% if request.endpoint == 'about' %}text-primary bg-slate-100 font-semibold{% else %}text-slate-600 hover:text-primary hover:bg-slate-50{% endif %}">
+                                About
+                            </a>
+                        </li>
+                    </ul>
+                </nav>
+
+            </div>
+        </div>
+    </header>
+
+    <!-- PROMINENT DISCLAIMER BANNER (Dismissible with vanilla JS) -->
+    <div id="disclaimer-banner" role="status" aria-live="polite" class="bg-[#FEF3C7] border-b border-amber-200 text-amber-900 transition-all duration-300">
+        <div class="max-w-7xl mx-auto py-2.5 px-4 sm:px-6 lg:px-8 flex items-center justify-between gap-3 text-xs sm:text-sm">
+            <div class="flex items-center gap-2.5 flex-1">
+                <!-- Info circle icon -->
+                <svg class="w-4 h-4 sm:w-5 sm:h-5 text-amber-700 flex-shrink-0" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                    <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd" />
+                </svg>
+                <p class="leading-snug">
+                    <strong class="font-semibold text-amber-950">Notice:</strong> ClauseWise helps you understand documents and prepare questions for a lawyer. It does not provide legal advice and is not a substitute for professional counsel.
+                </p>
+            </div>
+            <button type="button" id="dismiss-disclaimer-btn" aria-label="Dismiss disclaimer reminder" class="p-1 rounded text-amber-700 hover:text-amber-950 hover:bg-amber-200/60 focus:outline-none focus:ring-2 focus:ring-amber-500 transition-colors">
+                <svg class="w-4 h-4" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                    <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" />
+                </svg>
+            </button>
+        </div>
+    </div>
+
+    <!-- Flash Messages Container -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-4">
+                {% for category, message in messages %}
+                    <div class="p-4 rounded-md mb-3 flex items-center justify-between text-sm {% if category == 'danger' %}bg-red-50 text-red-800 border border-red-200{% elif category == 'warning' %}bg-amber-50 text-amber-800 border border-amber-200{% elif category == 'success' %}bg-green-50 text-green-800 border border-green-200{% else %}bg-blue-50 text-blue-800 border border-blue-200{% endif %}" role="alert">
+                        <span>{{ message }}</span>
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+    {% endwith %}
+
+    <!-- Main Content Area -->
+    <main role="main" id="main-content" class="flex-grow w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Footer -->
+    <footer role="contentinfo" class="bg-primary text-slate-300 border-t border-slate-800 mt-auto py-8">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex flex-col md:flex-row items-center justify-between gap-4 text-center md:text-left text-xs sm:text-sm">
+                <div class="space-y-1">
+                    <p class="font-display font-medium text-white text-base">ClauseWise Legal Document Assistant</p>
+                    <p class="text-slate-400 max-w-2xl">
+                        ClauseWise provides information, not legal advice. For decisions with legal consequences, consult a licensed attorney in your jurisdiction.
+                    </p>
+                </div>
+                <div class="text-slate-400 md:text-right flex flex-col items-center md:items-end gap-1">
+                    <p>Built with: <span class="text-slate-200">Python, Flask, Google Gemini AI, Tailwind CSS</span></p>
+                    <p class="text-xs text-slate-500">&copy; 2026 ClauseWise. All rights reserved.</p>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Banner dismissal script (stored in a JS variable, not persisted across reload) -->
+    <script>
+        let isDisclaimerDismissed = false;
+        const bannerElement = document.getElementById('disclaimer-banner');
+        const dismissButton = document.getElementById('dismiss-disclaimer-btn');
+
+        if (dismissButton && bannerElement) {
+            dismissButton.addEventListener('click', function () {
+                isDisclaimerDismissed = true;
+                bannerElement.style.display = 'none';
+            });
+        }
+    </script>
+
+    {% block scripts %}{% endblock %}
+</body>
+</html>

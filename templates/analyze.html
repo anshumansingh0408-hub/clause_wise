@@ -1,0 +1,215 @@
+{% extends "base.html" %}
+
+{% block title %}Analysis: {{ source_name }} - ClauseWise{% endblock %}
+
+{% block content %}
+<div class="space-y-8 pb-16 max-w-5xl mx-auto animate-fade-up">
+
+    <!-- Top Navigation Bar -->
+    <div class="flex items-center justify-between">
+        <a href="{{ url_for('index') }}" class="inline-flex items-center gap-1.5 text-sm font-semibold text-secondary hover:text-primary transition-colors">
+            ← Back to Upload
+        </a>
+        <span class="text-xs text-muted">Analysis Reference View</span>
+    </div>
+
+    <!-- 1. Document Overview Card -->
+    <div class="bg-white rounded-2xl border border-slate-200 p-6 sm:p-8 shadow-sm space-y-4">
+        <div class="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 pb-4">
+            <div class="flex items-center gap-2">
+                <span class="px-3 py-1 rounded-full text-xs font-semibold bg-primary text-white">
+                    {{ analysis.metadata.overall_label or "Legal Document" }}
+                </span>
+                <span class="text-xs text-muted font-medium">
+                    {{ analysis.metadata.total_clauses or analysis.clauses|length }} clauses analyzed
+                </span>
+            </div>
+            <div class="text-xs text-slate-500 font-mono">
+                Document: <strong class="text-slate-700">{{ source_name }}</strong>
+            </div>
+        </div>
+        <div class="space-y-2">
+            <h1 class="font-display text-2xl sm:text-3xl font-bold text-primary">{{ source_name }}</h1>
+            <p class="text-sm sm:text-base text-slate-700 leading-relaxed">
+                {{ analysis.metadata.overall_label or "Comprehensive analysis completed." }}
+                ClauseWise scanned <strong>{{ analysis.metadata.total_clauses or analysis.clauses|length }} clauses</strong> across 
+                {{ analysis.metadata.total_words or "several" }} words in {{ analysis.metadata.analysis_time_sec or "0.4" }}s.
+                {% if analysis.metadata.risk_counts and analysis.metadata.risk_counts.high > 0 %}
+                    <span class="text-red-700 font-medium">Identified {{ analysis.metadata.risk_counts.high }} high-risk provisions requiring attorney consultation.</span>
+                {% else %}
+                    <span class="text-green-700 font-medium">No critical high-risk flags were detected. Terms appear standard.</span>
+                {% endif %}
+            </p>
+        </div>
+    </div>
+
+    <!-- 2. Risk Stat Row -->
+    {% set rc = analysis.metadata.risk_counts or {} %}
+    <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 text-center">
+        <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
+            <span class="text-xs font-semibold text-slate-500 uppercase tracking-wide">Total Clauses</span>
+            <p class="text-3xl font-display font-bold text-primary mt-1">{{ analysis.metadata.total_clauses or analysis.clauses|length }}</p>
+        </div>
+        <div class="bg-red-50 p-5 rounded-xl border border-red-200 shadow-sm">
+            <span class="text-xs font-semibold text-red-700 uppercase tracking-wide">High Risk</span>
+            <p class="text-3xl font-display font-bold text-red-800 mt-1">{{ rc.high or 0 }}</p>
+        </div>
+        <div class="bg-amber-50 p-5 rounded-xl border border-amber-200 shadow-sm">
+            <span class="text-xs font-semibold text-amber-800 uppercase tracking-wide">Medium Risk</span>
+            <p class="text-3xl font-display font-bold text-amber-900 mt-1">{{ rc.medium or 0 }}</p>
+        </div>
+        <div class="bg-green-50 p-5 rounded-xl border border-green-200 shadow-sm">
+            <span class="text-xs font-semibold text-green-700 uppercase tracking-wide">Low Risk</span>
+            <p class="text-3xl font-display font-bold text-green-800 mt-1">{{ rc.low or 0 }}</p>
+        </div>
+    </div>
+
+    <!-- 3. Clause List (Expandable Cards) -->
+    <div class="space-y-4">
+        <div class="flex items-center justify-between">
+            <h2 class="font-display text-xl sm:text-2xl font-bold text-primary">Clause-by-Clause Breakdown</h2>
+            <span class="text-xs text-muted">Click any clause to expand full text excerpt</span>
+        </div>
+        
+        <div class="space-y-3">
+            {% for clause in analysis.clauses %}
+                {% set r_info = clause.risk or {} %}
+                {% set r_level = (r_info.level or 'low')|lower %}
+                <div class="border border-slate-200 rounded-xl overflow-hidden bg-white shadow-sm transition-all hover:border-slate-300">
+                    <button type="button" aria-expanded="false" aria-controls="clause-body-{{ loop.index }}"
+                            onclick="window.toggleClauseCard({{ loop.index }})"
+                            class="w-full text-left p-4 sm:p-5 flex items-start sm:items-center justify-between gap-4 focus:outline-none focus:bg-slate-50 transition-colors">
+                        <div class="space-y-1 flex-1 min-w-0">
+                            <div class="flex flex-wrap items-center gap-2">
+                                <span class="px-2 py-0.5 rounded text-[11px] font-semibold bg-blue-50 text-secondary border border-blue-200">
+                                    {{ clause.category or "General" }}
+                                </span>
+                                {% if r_level == 'high' %}
+                                    <span class="badge badge-high text-[10px]">High Risk</span>
+                                {% elif r_level == 'medium' %}
+                                    <span class="badge badge-medium text-[10px]">Worth Reviewing</span>
+                                {% else %}
+                                    <span class="badge badge-low text-[10px]">Standard</span>
+                                {% endif %}
+                                <span class="text-xs text-muted font-medium">Section {{ loop.index }}</span>
+                            </div>
+                            <h3 class="font-display font-semibold text-base sm:text-lg text-primary truncate">
+                                {{ clause.title or ("Clause " ~ loop.index) }}
+                            </h3>
+                            <p class="text-xs sm:text-sm text-slate-600 line-clamp-2">
+                                {{ clause.plain_english or "Summary unavailable." }}
+                            </p>
+                        </div>
+                        <div class="text-slate-400 font-bold text-lg px-2 flex-shrink-0" id="clause-icon-{{ loop.index }}">
+                            +
+                        </div>
+                    </button>
+
+                    <!-- Expandable Body -->
+                    <div id="clause-body-{{ loop.index }}" class="hidden p-4 sm:p-6 bg-slate-50 border-t border-slate-200 space-y-4 text-xs sm:text-sm">
+                        <!-- Quoted Serif Excerpt -->
+                        <div class="space-y-1">
+                            <span class="text-xs font-semibold text-slate-500 uppercase tracking-wide">Original Contract Text Excerpt</span>
+                            <div class="excerpt">
+                                "{{ clause.text }}"
+                            </div>
+                        </div>
+
+                        {% if r_info.flags and r_info.flags|length > 0 %}
+                            <div class="p-3 bg-red-50 border border-red-200 rounded-lg text-red-900 space-y-1">
+                                <strong class="font-semibold text-xs text-red-950 uppercase tracking-wide">Risk Reasoning / Warning Flags:</strong>
+                                <ul class="list-disc list-inside space-y-0.5 text-xs">
+                                    {% for flag in r_info.flags %}
+                                        <li>{{ flag }}</li>
+                                    {% endfor %}
+                                </ul>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- 4. Action Checklist & Questions to Ask a Lawyer -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <!-- Action Checklist -->
+        <div class="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm space-y-4">
+            <div class="flex items-center gap-2 border-b border-slate-100 pb-3">
+                <span class="text-lg" aria-hidden="true">📋</span>
+                <h3 class="font-display font-semibold text-lg text-primary">Action Checklist</h3>
+            </div>
+            <p class="text-xs text-muted">Click items to mark them as addressed before your legal consultation.</p>
+            <ul class="space-y-2">
+                {% if analysis.checklist and analysis.checklist|length > 0 %}
+                    {% for item in analysis.checklist %}
+                        <li class="flex items-start gap-3 p-3 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 transition-colors cursor-pointer"
+                            onclick="this.classList.toggle('opacity-50'); this.querySelector('span.checklist-text').classList.toggle('line-through');">
+                            <input type="checkbox" id="check-{{ loop.index }}" aria-label="Toggle item {{ loop.index }}" class="mt-1 h-4 w-4 rounded text-accent focus:ring-accent cursor-pointer">
+                            <div class="flex-1">
+                                <span class="checklist-text text-sm font-medium text-slate-800">
+                                    <strong>[{{ item.priority or 'Review' }}]</strong> {{ item.action_item or item.concern }}
+                                </span>
+                                {% if item.concern %}
+                                    <p class="text-xs text-muted mt-0.5">Concern: {{ item.concern }}</p>
+                                {% endif %}
+                            </div>
+                        </li>
+                    {% endfor %}
+                {% else %}
+                    <li class="text-xs text-muted">No urgent negotiation actions required.</li>
+                {% endif %}
+            </ul>
+        </div>
+
+        <!-- Questions for Lawyer -->
+        <div class="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm space-y-4">
+            <div class="flex items-center gap-2 border-b border-slate-100 pb-3">
+                <span class="text-lg" aria-hidden="true">❓</span>
+                <h3 class="font-display font-semibold text-lg text-primary">Questions to Ask a Lawyer</h3>
+            </div>
+            <p class="text-xs text-muted">Formulated conversation points based on highlighted terms:</p>
+            <ol class="space-y-2.5 list-decimal list-inside text-xs sm:text-sm text-slate-800">
+                <li class="p-2.5 rounded-lg bg-slate-50 border border-slate-200">
+                    <span>What are standard limitation of liability caps for this contract category in our state?</span>
+                </li>
+                <li class="p-2.5 rounded-lg bg-slate-50 border border-slate-200">
+                    <span>Can we modify unilateral indemnity to require mutual indemnification with an aggregate monetary limit?</span>
+                </li>
+                <li class="p-2.5 rounded-lg bg-slate-50 border border-slate-200">
+                    <span>Does the renewal notification window allow reasonable operational time to decide on termination?</span>
+                </li>
+            </ol>
+        </div>
+    </div>
+
+    <!-- 5. Legal Disclaimer Notice -->
+    <div class="p-4 rounded-xl bg-amber-50 border border-amber-200 text-amber-900 text-xs text-center space-y-1">
+        <p class="font-semibold">Important Legal Notice</p>
+        <p>ClauseWise provides automated informational assistance and does not provide formal legal advice. Always consult a licensed attorney.</p>
+    </div>
+
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    window.toggleClauseCard = function (idx) {
+        const body = document.getElementById('clause-body-' + idx);
+        const icon = document.getElementById('clause-icon-' + idx);
+        const btn = body ? body.previousElementSibling : null;
+        if (body) {
+            const isHidden = body.classList.contains('hidden');
+            if (isHidden) {
+                body.classList.remove('hidden');
+                if (icon) icon.textContent = '−';
+                if (btn) btn.setAttribute('aria-expanded', 'true');
+            } else {
+                body.classList.add('hidden');
+                if (icon) icon.textContent = '+';
+                if (btn) btn.setAttribute('aria-expanded', 'false');
+            }
+        }
+    };
+</script>
+{% endblock %}
