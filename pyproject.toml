@@ -1,0 +1,7 @@
+[tool.flake8]
+max-line-length = 100
+exclude = ["venv", "__pycache__"]
+ignore = ["E501"]
+
+[tool.pytest.ini_options]
+testpaths = ["test_app.py", "test_analyzer.py", "test_comparator.py"]
