@@ -1,52 +1,69 @@
 {% extends "base.html" %}
 
-{% block title %}Compare: {{ name_a or 'Document A' }} vs. {{ name_b or 'Document B' }} - ClauseWise{% endblock %}
+{% block title %}Compare: {{ name_a or 'Document A' }} vs. {{ name_b or 'Document B' }} - ClauseWise AI{% endblock %}
 
 {% block content %}
-<div class="space-y-8 pb-16 max-w-5xl mx-auto animate-fade-up">
+<div class="space-y-10 pb-20 max-w-5xl mx-auto animate-fade-up">
 
     <!-- Top Navigation Bar -->
     <div class="flex items-center justify-between">
-        <a href="{{ url_for('index') }}" class="inline-flex items-center gap-1.5 text-sm font-semibold text-secondary hover:text-primary transition-colors">
-            ← Back to Upload
+        <a href="{{ url_for('index') }}" class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-white border border-slate-200 text-xs sm:text-sm font-semibold text-secondary hover:text-primary hover:border-slate-300 shadow-2xs transition-all">
+            <svg class="w-4 h-4" width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+            </svg>
+            <span>Back to Upload</span>
         </a>
-        <span class="text-xs text-muted">Comparison Reference View</span>
+        <div class="flex items-center gap-2 text-xs text-muted">
+            <span class="w-2 h-2 rounded-full bg-teal-500"></span>
+            <span>Comparative Redline Audit</span>
+        </div>
     </div>
 
     {% if not comparison %}
     <!-- Setup Mode: When user visits /compare directly without documents -->
-    <div class="bg-white rounded-2xl border border-slate-200 p-8 shadow-sm space-y-6 text-center">
-        <div class="max-w-xl mx-auto space-y-2">
-            <h1 class="font-display text-2xl sm:text-3xl font-bold text-primary">Compare Two Document Versions</h1>
-            <p class="text-sm text-muted">Upload two versions of a contract to highlight differing language, added/missing clauses, and which party terms favor.</p>
+    <div class="glass-card rounded-2xl border border-slate-200 p-8 sm:p-12 shadow-subtle space-y-8 text-center">
+        <div class="max-w-xl mx-auto space-y-3">
+            <div class="w-12 h-12 rounded-2xl bg-teal-50 text-teal-700 flex items-center justify-center mx-auto shadow-2xs border border-teal-200/60">
+                <svg class="w-6 h-6" width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
+                </svg>
+            </div>
+            <h1 class="font-display text-2xl sm:text-3xl lg:text-4xl font-bold text-primary">Compare Two Document Versions</h1>
+            <p class="text-sm text-slate-600">Upload two versions of an agreement to identify modified language, omitted terms, and analyze counterparty posture.</p>
         </div>
 
         <form action="{{ url_for('compare') }}" method="POST" enctype="multipart/form-data" class="space-y-6 text-left">
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <!-- Version A Box -->
-                <div class="p-6 rounded-xl border border-slate-200 bg-slate-50 space-y-3">
-                    <label for="title_a" class="block font-semibold text-sm text-primary">Version A (Baseline Document)</label>
-                    <input type="text" id="title_a" name="title_a" placeholder="e.g. Standard MSA V1" class="w-full rounded-lg border border-slate-300 p-2.5 text-sm bg-white">
-                    <label for="file_a" class="block text-xs font-semibold text-muted uppercase">Upload File</label>
-                    <input type="file" id="file_a" name="file_a" accept=".pdf,.docx,.txt" class="w-full text-xs text-slate-500 file:mr-3 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-primary file:text-white hover:file:bg-slate-800">
-                    <textarea name="text_a" rows="4" placeholder="Or paste Version A text here..." class="w-full rounded-lg border border-slate-300 p-2.5 text-xs bg-white"></textarea>
+                <div class="p-6 rounded-2xl border border-slate-200/90 bg-slate-50/70 space-y-4 shadow-2xs">
+                    <div class="flex items-center justify-between">
+                        <label for="title_a" class="block font-bold text-sm text-primary">Version A (Baseline Document)</label>
+                        <span class="text-[10px] uppercase font-bold text-slate-400">Baseline</span>
+                    </div>
+                    <input type="text" id="title_a" name="title_a" placeholder="e.g. Standard MSA V1" class="w-full rounded-xl border border-slate-300 p-3 text-xs sm:text-sm bg-white focus:outline-none focus:ring-2 focus:ring-secondary/30">
+                    <label for="file_a" class="block text-xs font-semibold text-muted uppercase tracking-wider">Upload File</label>
+                    <input type="file" id="file_a" name="file_a" accept=".pdf,.docx,.txt" class="w-full text-xs text-slate-500 file:mr-3 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-primary file:text-white hover:file:bg-secondary transition-all">
+                    <textarea name="text_a" rows="4" placeholder="Or paste Version A contract text here..." class="w-full rounded-xl border border-slate-300 p-3 text-xs bg-white focus:outline-none focus:ring-2 focus:ring-secondary/30"></textarea>
                 </div>
 
                 <!-- Version B Box -->
-                <div class="p-6 rounded-xl border border-slate-200 bg-slate-50 space-y-3">
-                    <label for="title_b" class="block font-semibold text-sm text-primary">Version B (Revised Draft)</label>
-                    <input type="text" id="title_b" name="title_b" placeholder="e.g. Counterparty Redline" class="w-full rounded-lg border border-slate-300 p-2.5 text-sm bg-white">
-                    <label for="file_b" class="block text-xs font-semibold text-muted uppercase">Upload File</label>
-                    <input type="file" id="file_b" name="file_b" accept=".pdf,.docx,.txt" class="w-full text-xs text-slate-500 file:mr-3 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-primary file:text-white hover:file:bg-slate-800">
-                    <textarea name="text_b" rows="4" placeholder="Or paste Version B text here..." class="w-full rounded-lg border border-slate-300 p-2.5 text-xs bg-white"></textarea>
+                <div class="p-6 rounded-2xl border border-slate-200/90 bg-slate-50/70 space-y-4 shadow-2xs">
+                    <div class="flex items-center justify-between">
+                        <label for="title_b" class="block font-bold text-sm text-primary">Version B (Counterparty Redline)</label>
+                        <span class="text-[10px] uppercase font-bold text-teal-600">Redline</span>
+                    </div>
+                    <input type="text" id="title_b" name="title_b" placeholder="e.g. Counterparty Redline" class="w-full rounded-xl border border-slate-300 p-3 text-xs sm:text-sm bg-white focus:outline-none focus:ring-2 focus:ring-teal-500/30">
+                    <label for="file_b" class="block text-xs font-semibold text-muted uppercase tracking-wider">Upload File</label>
+                    <input type="file" id="file_b" name="file_b" accept=".pdf,.docx,.txt" class="w-full text-xs text-slate-500 file:mr-3 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-teal-700 file:text-white hover:file:bg-teal-800 transition-all">
+                    <textarea name="text_b" rows="4" placeholder="Or paste Version B contract text here..." class="w-full rounded-xl border border-slate-300 p-3 text-xs bg-white focus:outline-none focus:ring-2 focus:ring-teal-500/30"></textarea>
                 </div>
             </div>
 
-            <div class="flex flex-col sm:flex-row items-center justify-between gap-4 pt-2">
-                <a href="{{ url_for('compare', pair='demo') }}" class="text-xs font-semibold text-secondary hover:underline">
-                    ⚡ Load Interactive Demo Comparison
+            <div class="flex flex-col sm:flex-row items-center justify-between gap-4 pt-4 border-t border-slate-200/80">
+                <a href="{{ url_for('compare', pair='demo') }}" class="inline-flex items-center gap-1.5 text-xs font-semibold text-secondary hover:text-accent transition-colors">
+                    <span>⚡</span> Load Interactive Redline Demo
                 </a>
-                <button type="submit" class="w-full sm:w-auto px-8 py-3 rounded-xl font-semibold text-sm text-white bg-primary hover:bg-slate-800 transition-colors shadow-sm">
+                <button type="submit" class="w-full sm:w-auto px-8 py-3.5 rounded-xl font-semibold text-sm text-white bg-gradient-to-r from-primary to-secondary hover:from-secondary hover:to-primary transition-all shadow-subtle hover:shadow-elevated">
                     Compare Documents →
                 </button>
             </div>
@@ -62,10 +79,10 @@
     {% set discussion_points = comparison.key_discussion_points or [] %}
 
     <!-- 1. Comparison Header & Overall Summary -->
-    <div class="bg-white rounded-2xl border border-slate-200 p-6 sm:p-8 shadow-sm space-y-4">
+    <div class="glass-card rounded-2xl border border-slate-200 p-6 sm:p-8 shadow-subtle space-y-5">
         <div class="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 pb-4">
-            <div class="flex items-center gap-2">
-                <span class="px-3 py-1 rounded-full text-xs font-semibold bg-accent text-white">
+            <div class="flex items-center gap-2.5">
+                <span class="px-3.5 py-1 rounded-full text-xs font-bold bg-accent text-white shadow-2xs">
                     Comparison Complete
                 </span>
                 <span class="text-xs text-muted font-medium">
@@ -79,16 +96,16 @@
             {% endif %}
         </div>
 
-        <div class="space-y-2">
-            <h1 class="font-display text-2xl sm:text-3xl font-bold text-primary">
+        <div class="space-y-3">
+            <h1 class="font-display text-2xl sm:text-3xl lg:text-4xl font-bold text-primary">
                 {{ comparison.doc_a_type or name_a }} vs. {{ comparison.doc_b_type or name_b }}
             </h1>
-            <p class="text-sm sm:text-base text-slate-700 leading-relaxed">
+            <p class="text-sm sm:text-base text-slate-700 leading-relaxed font-normal">
                 {{ comparison.overall_comparison or "Side-by-side comparison completed. Key variations, omissions, and negotiation impacts are detailed below." }}
             </p>
             {% if comparison.comparability_note %}
-                <div class="p-3 bg-amber-50 border border-amber-200 rounded-lg text-xs text-amber-900">
-                    <strong>Note:</strong> {{ comparison.comparability_note }}
+                <div class="p-4 bg-amber-50 border border-amber-200 rounded-xl text-xs text-amber-900 shadow-2xs">
+                    <strong class="font-bold text-amber-950">Comparability Note:</strong> {{ comparison.comparability_note }}
                 </div>
             {% endif %}
         </div>
@@ -96,41 +113,47 @@
 
     <!-- 2. Metrics Stat Row -->
     <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 text-center">
-        <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
-            <span class="text-xs font-semibold text-slate-500 uppercase tracking-wide">Total Differences</span>
-            <p class="text-3xl font-display font-bold text-primary mt-1">{{ metrics.total_differences or differing|length }}</p>
+        <div class="glass-card p-5 rounded-2xl border border-slate-200 shadow-subtle">
+            <span class="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Total Differences</span>
+            <p class="text-3xl font-display font-bold text-primary mt-1.5">{{ metrics.total_differences or differing|length }}</p>
+            <span class="text-[10px] text-muted font-medium mt-1 block">Variations flagged</span>
         </div>
-        <div class="bg-red-50 p-5 rounded-xl border border-red-200 shadow-sm">
-            <span class="text-xs font-semibold text-red-700 uppercase tracking-wide">High Significance</span>
-            <p class="text-3xl font-display font-bold text-red-800 mt-1">{{ metrics.high_significance_count or 0 }}</p>
+        <div class="glass-card p-5 rounded-2xl border border-red-200/80 bg-red-50/40 shadow-subtle">
+            <span class="text-[11px] font-bold text-red-700 uppercase tracking-wider">High Significance</span>
+            <p class="text-3xl font-display font-bold text-red-800 mt-1.5">{{ metrics.high_significance_count or 0 }}</p>
+            <span class="text-[10px] text-red-600 font-medium mt-1 block">Major legal shift</span>
         </div>
-        <div class="bg-amber-50 p-5 rounded-xl border border-amber-200 shadow-sm">
-            <span class="text-xs font-semibold text-amber-800 uppercase tracking-wide">Differing Terms</span>
-            <p class="text-3xl font-display font-bold text-amber-900 mt-1">{{ metrics.differing_terms_count or differing|length }}</p>
+        <div class="glass-card p-5 rounded-2xl border border-amber-200/80 bg-amber-50/40 shadow-subtle">
+            <span class="text-[11px] font-bold text-amber-800 uppercase tracking-wider">Differing Terms</span>
+            <p class="text-3xl font-display font-bold text-amber-900 mt-1.5">{{ metrics.differing_terms_count or differing|length }}</p>
+            <span class="text-[10px] text-amber-700 font-medium mt-1 block">Altered provisions</span>
         </div>
-        <div class="bg-slate-50 p-5 rounded-xl border border-slate-200 shadow-sm">
-            <span class="text-xs font-semibold text-slate-600 uppercase tracking-wide">Missing Clauses / Total Clauses</span>
-            <p class="text-3xl font-display font-bold text-slate-800 mt-1">{{ metrics.missing_clauses_count or (missing_a|length + missing_b|length) }}</p>
+        <div class="glass-card p-5 rounded-2xl border border-slate-200 shadow-subtle">
+            <span class="text-[11px] font-bold text-slate-600 uppercase tracking-wider">Missing Clauses</span>
+            <p class="text-3xl font-display font-bold text-slate-800 mt-1.5">{{ metrics.missing_clauses_count or (missing_a|length + missing_b|length) }}</p>
+            <span class="text-[10px] text-muted font-medium mt-1 block">Omitted provisions</span>
         </div>
     </div>
 
     <!-- 3. Missing Clauses Section (Two Columns) -->
     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
         <!-- Missing in Doc A -->
-        <div class="bg-white rounded-xl border border-slate-200 p-5 shadow-sm space-y-3">
-            <h2 class="font-display font-semibold text-base text-primary flex items-center justify-between">
-                <span>Missing from {{ name_a or 'Document A' }}</span>
-                <span class="text-xs text-muted">({{ missing_a|length }})</span>
+        <div class="glass-card rounded-2xl border border-slate-200 p-6 shadow-subtle space-y-4">
+            <h2 class="font-display font-bold text-base text-primary flex items-center justify-between border-b border-slate-100 pb-3">
+                <span>Omitted from {{ name_a or 'Document A' }}</span>
+                <span class="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-600">{{ missing_a|length }}</span>
             </h2>
             {% if missing_a|length > 0 %}
-                <ul class="space-y-2 text-xs">
+                <ul class="space-y-3 text-xs">
                     {% for m in missing_a %}
-                        <li class="p-3 rounded-lg bg-slate-50 border border-slate-200 space-y-1">
-                            <span class="font-semibold text-slate-800 block">{{ m.topic or 'Provision' }}</span>
-                            <p class="text-slate-600 italic">Found in B: "{{ m.found_in_b }}"</p>
-                            {% if m.significance %}
-                                <span class="badge {% if m.significance == 'High' %}badge-high{% else %}badge-medium{% endif %} text-[9px]">{{ m.significance }}</span>
-                            {% endif %}
+                        <li class="p-3.5 rounded-xl bg-slate-50 border border-slate-200/80 space-y-1.5 shadow-2xs">
+                            <div class="flex items-center justify-between">
+                                <span class="font-bold text-slate-800">{{ m.topic or 'Provision' }}</span>
+                                {% if m.significance %}
+                                    <span class="badge {% if m.significance == 'High' %}badge-high{% else %}badge-medium{% endif %} text-[9px]">{{ m.significance }}</span>
+                                {% endif %}
+                            </div>
+                            <p class="text-slate-600 italic font-serif">Present in B: "{{ m.found_in_b }}"</p>
                         </li>
                     {% endfor %}
                 </ul>
@@ -140,20 +163,22 @@
         </div>
 
         <!-- Missing in Doc B -->
-        <div class="bg-white rounded-xl border border-slate-200 p-5 shadow-sm space-y-3">
-            <h2 class="font-display font-semibold text-base text-primary flex items-center justify-between">
-                <span>Missing from {{ name_b or 'Document B' }}</span>
-                <span class="text-xs text-muted">({{ missing_b|length }})</span>
+        <div class="glass-card rounded-2xl border border-slate-200 p-6 shadow-subtle space-y-4">
+            <h2 class="font-display font-bold text-base text-primary flex items-center justify-between border-b border-slate-100 pb-3">
+                <span>Omitted from {{ name_b or 'Document B' }}</span>
+                <span class="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-600">{{ missing_b|length }}</span>
             </h2>
             {% if missing_b|length > 0 %}
-                <ul class="space-y-2 text-xs">
+                <ul class="space-y-3 text-xs">
                     {% for m in missing_b %}
-                        <li class="p-3 rounded-lg bg-slate-50 border border-slate-200 space-y-1">
-                            <span class="font-semibold text-slate-800 block">{{ m.topic or 'Provision' }}</span>
-                            <p class="text-slate-600 italic">Found in A: "{{ m.found_in_a }}"</p>
-                            {% if m.significance %}
-                                <span class="badge {% if m.significance == 'High' %}badge-high{% else %}badge-medium{% endif %} text-[9px]">{{ m.significance }}</span>
-                            {% endif %}
+                        <li class="p-3.5 rounded-xl bg-slate-50 border border-slate-200/80 space-y-1.5 shadow-2xs">
+                            <div class="flex items-center justify-between">
+                                <span class="font-bold text-slate-800">{{ m.topic or 'Provision' }}</span>
+                                {% if m.significance %}
+                                    <span class="badge {% if m.significance == 'High' %}badge-high{% else %}badge-medium{% endif %} text-[9px]">{{ m.significance }}</span>
+                                {% endif %}
+                            </div>
+                            <p class="text-slate-600 italic font-serif">Present in A: "{{ m.found_in_a }}"</p>
                         </li>
                     {% endfor %}
                 </ul>
@@ -166,34 +191,39 @@
     <!-- 4. Differing Terms Section -->
     <div class="space-y-4">
         <div class="flex items-center justify-between">
-            <h2 class="font-display text-xl sm:text-2xl font-bold text-primary">Differing Terms</h2>
-            <span class="text-xs text-muted">{{ differing|length }} terms compared</span>
+            <div>
+                <h2 class="font-display text-xl sm:text-2xl font-bold text-primary">Differing Terms & Modifications</h2>
+                <p class="text-xs text-muted">Side-by-side textual analysis of altered contractual commitments</p>
+            </div>
+            <span class="text-xs font-semibold text-slate-500 bg-slate-100 px-3 py-1 rounded-full border border-slate-200">
+                {{ differing|length }} Differences
+            </span>
         </div>
 
         <div class="space-y-4">
             {% if differing|length > 0 %}
                 {% for d in differing %}
-                    <div class="bg-white rounded-xl border border-slate-200 p-5 shadow-sm space-y-3">
-                        <div class="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 pb-2">
-                            <span class="font-display font-semibold text-base text-primary">{{ d.topic or ('Term Difference #' ~ loop.index) }}</span>
+                    <div class="glass-card rounded-2xl border border-slate-200 p-6 shadow-subtle space-y-4">
+                        <div class="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 pb-3">
+                            <span class="font-display font-bold text-base text-primary">{{ d.topic or ('Term Difference #' ~ loop.index) }}</span>
                             <div class="flex items-center gap-2">
                                 <span class="badge {% if d.significance == 'High' %}badge-high{% else %}badge-medium{% endif %} text-[10px]">
                                     {{ d.significance or 'Differs' }}
                                 </span>
                                 {% if d.favors %}
-                                    <span class="text-xs font-semibold text-secondary">{{ d.favors }}</span>
+                                    <span class="text-xs font-semibold text-secondary bg-blue-50 px-2.5 py-0.5 rounded-full border border-blue-200">{{ d.favors }}</span>
                                 {% endif %}
                             </div>
                         </div>
 
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs sm:text-sm">
-                            <div class="p-3 bg-slate-50 rounded-lg border border-slate-200 space-y-1">
-                                <span class="font-semibold text-[11px] text-slate-500 uppercase tracking-wide">{{ name_a or 'Document A' }} Says:</span>
-                                <p class="font-serif italic text-slate-800">"{{ d.doc_a_says or 'Not specified' }}"</p>
+                            <div class="p-4 bg-slate-50 rounded-xl border border-slate-200/90 space-y-1.5 shadow-2xs">
+                                <span class="font-bold text-[11px] text-slate-500 uppercase tracking-wider">{{ name_a or 'Document A' }} States:</span>
+                                <p class="font-serif italic text-slate-800 leading-relaxed">"{{ d.doc_a_says or 'Not specified' }}"</p>
                             </div>
-                            <div class="p-3 bg-amber-50/60 rounded-lg border border-amber-200 space-y-1">
-                                <span class="font-semibold text-[11px] text-amber-800 uppercase tracking-wide">{{ name_b or 'Document B' }} Says:</span>
-                                <p class="font-serif italic text-slate-900">"{{ d.doc_b_says or 'Not specified' }}"</p>
+                            <div class="p-4 bg-amber-50/70 rounded-xl border border-amber-200 space-y-1.5 shadow-2xs">
+                                <span class="font-bold text-[11px] text-amber-900 uppercase tracking-wider">{{ name_b or 'Document B' }} States:</span>
+                                <p class="font-serif italic text-slate-900 leading-relaxed">"{{ d.doc_b_says or 'Not specified' }}"</p>
                             </div>
                         </div>
                     </div>
@@ -206,20 +236,28 @@
 
     <!-- 5. Key Discussion Points -->
     {% if discussion_points|length > 0 %}
-        <div class="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm space-y-3">
-            <h2 class="font-display font-semibold text-lg text-primary">Key Discussion Points for Negotiation</h2>
-            <ol class="space-y-2 list-decimal list-inside text-xs sm:text-sm text-slate-800">
+        <div class="glass-card rounded-2xl border border-slate-200 p-6 sm:p-8 shadow-subtle space-y-4">
+            <div class="flex items-center gap-2.5">
+                <div class="w-8 h-8 rounded-lg bg-teal-50 text-teal-700 flex items-center justify-center font-bold text-sm">
+                    ⚖️
+                </div>
+                <div>
+                    <h2 class="font-display font-bold text-lg text-primary">Strategic Negotiation Discussion Points</h2>
+                    <p class="text-[11px] text-muted">Core leverage and exposure vectors for counterparty discussions</p>
+                </div>
+            </div>
+            <ol class="space-y-2.5 list-decimal list-inside text-xs sm:text-sm text-slate-800">
                 {% for pt in discussion_points %}
-                    <li class="p-2.5 rounded bg-slate-50 border border-slate-200 leading-relaxed">{{ pt }}</li>
+                    <li class="p-3.5 rounded-xl bg-white border border-slate-200 leading-relaxed shadow-2xs">{{ pt }}</li>
                 {% endfor %}
             </ol>
         </div>
     {% endif %}
 
     <!-- 6. Bottom Disclaimer -->
-    <div class="p-4 rounded-xl bg-amber-50 border border-amber-200 text-amber-900 text-xs text-center space-y-1">
-        <p class="font-semibold">Comparative Analysis Disclaimer</p>
-        <p>{{ comparison.disclaimer or "ClauseWise provides automated comparisons to assist with understanding. It does not recommend which document to accept or sign." }}</p>
+    <div class="p-5 rounded-2xl bg-amber-50 border border-amber-200/80 text-amber-900 text-xs text-center space-y-1 shadow-2xs">
+        <p class="font-bold text-amber-950">Comparative Analysis Disclaimer</p>
+        <p class="text-amber-800">{{ comparison.disclaimer or "ClauseWise provides automated comparisons to assist with understanding. It does not recommend which document to accept or sign." }}</p>
     </div>
 
     {% endif %}

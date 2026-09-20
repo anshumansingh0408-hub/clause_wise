@@ -3,13 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="ClauseWise - AI-powered legal document assistant helping you understand contracts, detect risks, and prepare questions for legal counsel.">
-    <title>{% block title %}ClauseWise - AI-Powered Legal Document Assistant{% endblock %}</title>
+    <meta name="description" content="ClauseWise - AI-powered legal document intelligence platform. Analyze contracts, identify hidden risks, compare redlines, and prepare lawyer-ready checklists.">
+    <title>{% block title %}ClauseWise - AI Legal Document Intelligence{% endblock %}</title>
 
-    <!-- Google Fonts CDN: Lora (headings/trust) and Inter (body/modern) -->
+    <!-- Google Fonts CDN: Lora (Editorial Legal Serif) + Inter / Plus Jakarta Sans feel -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Lora:ital,wght@0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Lora:ital,wght@0,500;0,600;0,700;1,400;1,500&display=swap" rel="stylesheet">
 
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -18,20 +18,29 @@
             theme: {
                 extend: {
                     colors: {
-                        primary: "#1E3A5F",
-                        secondary: "#3B6EA5",
-                        accent: "#0EA5A5",
-                        success: "#16A34A",
-                        warning: "#D97706",
+                        primary: "#0F1E36",      /* Rich deep obsidian navy */
+                        secondary: "#1E3A5F",    /* Classic trust navy */
+                        accent: "#0EA5A5",       /* Modern legal teal */
+                        accentHover: "#0D9494",
+                        accentGlow: "rgba(14, 165, 165, 0.15)",
+                        success: "#15803D",
+                        warning: "#B45309",
                         danger: "#DC2626",
                         surface: "#FFFFFF",
                         paper: "#F8FAFC",
-                        ink: "#1E293B",
-                        muted: "#64748B"
+                        ink: "#0F172A",
+                        muted: "#64748B",
+                        subtleBorder: "#E2E8F0"
                     },
                     fontFamily: {
                         display: ["Lora", "Georgia", "serif"],
                         body: ["Inter", "-apple-system", "BlinkMacSystemFont", "sans-serif"]
+                    },
+                    boxShadow: {
+                        'glass': '0 8px 32px 0 rgba(15, 30, 54, 0.08)',
+                        'subtle': '0 1px 3px 0 rgba(0, 0, 0, 0.05), 0 1px 2px -1px rgba(0, 0, 0, 0.05)',
+                        'elevated': '0 10px 25px -5px rgba(15, 30, 54, 0.08), 0 8px 10px -6px rgba(15, 30, 54, 0.04)',
+                        'glow-teal': '0 0 20px -3px rgba(14, 165, 165, 0.25)',
                     }
                 }
             }
@@ -41,15 +50,15 @@
     <!-- Custom CSS Stylesheet for ClauseWise Design System -->
     <style>
         :root {
-            --color-primary: #1E3A5F;
-            --color-secondary: #3B6EA5;
+            --color-primary: #0F1E36;
+            --color-secondary: #1E3A5F;
             --color-accent: #0EA5A5;
-            --color-success: #16A34A;
-            --color-warning: #D97706;
+            --color-success: #15803D;
+            --color-warning: #B45309;
             --color-danger: #DC2626;
             --color-surface: #FFFFFF;
             --color-paper: #F8FAFC;
-            --color-ink: #1E293B;
+            --color-ink: #0F172A;
             --color-muted: #64748B;
         }
 
@@ -59,29 +68,52 @@
 
         body {
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-            color: #1E293B;
+            color: #0F172A;
             background-color: #F8FAFC;
             min-height: 100vh;
             display: flex;
             flex-direction: column;
+            background-image: 
+                radial-gradient(at 15% 15%, rgba(14, 165, 165, 0.03) 0px, transparent 50%),
+                radial-gradient(at 85% 10%, rgba(30, 58, 95, 0.04) 0px, transparent 50%),
+                radial-gradient(at 50% 90%, rgba(14, 165, 165, 0.02) 0px, transparent 50%);
+            background-attachment: fixed;
         }
 
         h1, h2, h3, h4, .font-display {
             font-family: 'Lora', Georgia, serif;
+            letter-spacing: -0.015em;
         }
+
+        /* Prevent unconstrained SVG expansion */
+        svg {
+            display: inline-block;
+            vertical-align: middle;
+            flex-shrink: 0;
+        }
+        svg.w-3 { width: 12px !important; height: 12px !important; }
+        svg.w-3\.5 { width: 14px !important; height: 14px !important; }
+        svg.w-4 { width: 16px !important; height: 16px !important; }
+        svg.w-5 { width: 20px !important; height: 20px !important; }
+        svg.w-6 { width: 24px !important; height: 24px !important; }
+        svg.w-7 { width: 28px !important; height: 28px !important; }
+        svg.w-8 { width: 32px !important; height: 32px !important; }
+        svg.w-10 { width: 40px !important; height: 40px !important; }
+        svg.w-12 { width: 48px !important; height: 48px !important; }
+        svg.w-14 { width: 56px !important; height: 56px !important; }
 
         /* Skip to main content link for keyboard accessibility */
         .skip-link {
             position: absolute;
             top: -999px;
             left: 1rem;
-            background: #1E3A5F;
+            background: #0F1E36;
             color: #FFFFFF;
             padding: 0.75rem 1.25rem;
-            border-radius: 0.375rem;
+            border-radius: 0.5rem;
             font-weight: 600;
             z-index: 9999;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            box-shadow: 0 4px 14px rgba(0, 0, 0, 0.2);
             text-decoration: none;
             transition: top 0.2s ease;
         }
@@ -89,11 +121,29 @@
             top: 1rem;
         }
 
+        /* Glassmorphism Card Style */
+        .glass-card {
+            background: rgba(255, 255, 255, 0.92);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(226, 232, 240, 0.85);
+            box-shadow: 0 4px 20px -2px rgba(15, 30, 54, 0.05);
+        }
+
+        .glass-card-hover {
+            transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .glass-card-hover:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 28px -4px rgba(15, 30, 54, 0.08);
+            border-color: rgba(14, 165, 165, 0.3);
+        }
+
         /* Fade-up card animation */
         @keyframes fadeUp {
             from {
                 opacity: 0;
-                transform: translateY(16px);
+                transform: translateY(14px);
             }
             to {
                 opacity: 1;
@@ -101,7 +151,7 @@
             }
         }
         .animate-fade-up, .card-fade-up {
-            animation: fadeUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+            animation: fadeUp 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
         }
 
         /* Striped animated progress bar for processing state */
@@ -131,7 +181,7 @@
                 transform: scale(1);
             }
             50% {
-                opacity: 0.4;
+                opacity: 0.35;
                 transform: scale(0.85);
             }
         }
@@ -144,49 +194,49 @@
             animation: statusPulse 1.4s ease-in-out infinite;
         }
 
-        /* Risk badge pills - soft calm background tints */
+        /* Refined risk badge pills */
         .badge {
             display: inline-flex;
             align-items: center;
             gap: 0.375rem;
             padding: 0.25rem 0.625rem;
             border-radius: 9999px;
-            font-size: 0.75rem;
+            font-size: 0.72rem;
             font-weight: 600;
-            letter-spacing: 0.025em;
+            letter-spacing: 0.03em;
             text-transform: uppercase;
         }
         .badge-high, .badge-risk-high {
-            background-color: #FEE2E2;
+            background-color: #FEF2F2;
             color: #991B1B;
-            border: 1px solid #FCA5A5;
+            border: 1px solid #FECACA;
         }
         .badge-medium, .badge-risk-medium {
-            background-color: #FEF3C7;
+            background-color: #FFFBEB;
             color: #92400E;
-            border: 1px solid #FCD34D;
+            border: 1px solid #FDE68A;
         }
         .badge-low, .badge-risk-low {
-            background-color: #DCFCE7;
+            background-color: #F0FDF4;
             color: #166534;
-            border: 1px solid #86EFAC;
+            border: 1px solid #BBF7D0;
         }
 
         /* Confidence badge pills */
         .badge-confidence-high {
-            background-color: #DCFCE7;
+            background-color: #F0FDF4;
             color: #166534;
-            border: 1px solid #86EFAC;
+            border: 1px solid #BBF7D0;
         }
         .badge-confidence-medium {
-            background-color: #FEF3C7;
+            background-color: #FFFBEB;
             color: #92400E;
-            border: 1px solid #FCD34D;
+            border: 1px solid #FDE68A;
         }
         .badge-confidence-low {
-            background-color: #FEE2E2;
+            background-color: #FEF2F2;
             color: #991B1B;
-            border: 1px solid #FCA5A5;
+            border: 1px solid #FECACA;
         }
 
         /* File drop zone dragover state */
@@ -196,36 +246,55 @@
         .dropzone.dragover, .drop-zone.dragover, #dropZone.dragover {
             border-color: #0EA5A5 !important;
             border-style: dashed !important;
-            background-color: rgba(14, 165, 165, 0.06) !important;
-            transform: scale(1.01);
+            background-color: rgba(14, 165, 165, 0.05) !important;
+            transform: scale(1.008);
         }
 
-        /* Mono font utility for original quoted legal excerpts */
+        /* Mono / Serif excerpt box for legal quotations */
         .excerpt, .document-excerpt, .legal-excerpt, .font-legal-quote {
-            font-family: Georgia, 'Times New Roman', serif;
-            background: #F1F5F9;
-            padding: 8px 12px;
-            border-left: 3px solid #CBD5E1;
+            font-family: 'Lora', Georgia, 'Times New Roman', serif;
+            background: #F8FAFC;
+            padding: 12px 16px;
+            border-left: 3px solid #0EA5A5;
             font-style: italic;
-            color: #334155;
-            border-radius: 0 4px 4px 0;
-            line-height: 1.6;
+            color: #1E293B;
+            border-radius: 0 8px 8px 0;
+            line-height: 1.65;
+            box-shadow: inset 0 1px 2px rgba(0,0,0,0.02);
         }
 
-        /* Diff styling */
+        /* Interactive diff highlighting */
         ins.diff-ins {
-            background-color: rgba(22, 163, 74, 0.15);
+            background-color: rgba(22, 163, 74, 0.12);
             color: #15803D;
             text-decoration: none;
-            padding: 2px 4px;
-            border-radius: 3px;
+            padding: 2px 5px;
+            border-radius: 4px;
+            font-weight: 500;
         }
         del.diff-del {
-            background-color: rgba(220, 38, 38, 0.15);
+            background-color: rgba(220, 38, 38, 0.12);
             color: #B91C1C;
             text-decoration: line-through;
-            padding: 2px 4px;
-            border-radius: 3px;
+            padding: 2px 5px;
+            border-radius: 4px;
+            font-weight: 500;
+        }
+
+        /* Custom subtle scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #F1F5F9;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #CBD5E1;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94A3B8;
         }
     </style>
 
@@ -237,15 +306,15 @@
     <a href="#main-content" class="skip-link">Skip to main content</a>
 
     <!-- Header Navigation -->
-    <header role="banner" class="sticky top-0 z-40 bg-white border-b border-slate-200 shadow-sm">
+    <header role="banner" class="sticky top-0 z-40 bg-white/90 backdrop-blur-md border-b border-slate-200/80 shadow-subtle">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex items-center justify-between h-16 sm:h-20">
                 
                 <!-- Logo & Tagline -->
-                <a href="{{ url_for('index') }}" class="flex items-center gap-3 group text-decoration-none focus:outline-none focus:ring-2 focus:ring-accent rounded-lg p-1">
-                    <!-- Minimal Scale of Balance SVG Icon -->
-                    <div class="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center text-primary group-hover:bg-slate-200 transition-colors">
-                        <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <a href="{{ url_for('index') }}" class="flex items-center gap-3 group text-decoration-none focus:outline-none focus:ring-2 focus:ring-accent rounded-xl p-1 transition-all">
+                    <!-- Scale of Balance SVG Icon with explicit dimensions -->
+                    <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-primary via-secondary to-[#162f52] flex items-center justify-center text-white shadow-sm ring-1 ring-white/20 group-hover:scale-105 group-hover:shadow-glow-teal transition-all" style="width: 40px; height: 40px; min-width: 40px; max-width: 40px;">
+                        <svg class="w-5 h-5 text-teal-300" width="20" height="20" style="width: 20px; height: 20px; max-width: 20px; max-height: 20px; display: block;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                             <path d="M12 3v18"/>
                             <path d="M6 7h12"/>
                             <path d="m3 13 3-6 3 6a3 3 0 0 1-6 0Z"/>
@@ -254,27 +323,36 @@
                         </svg>
                     </div>
                     <div>
-                        <span class="font-display text-2xl font-bold text-primary tracking-tight">Clause<span class="text-secondary">Wise</span></span>
-                        <p class="text-xs text-muted font-medium tracking-normal -mt-1 hidden sm:block">Understand before you sign</p>
+                        <div class="flex items-center gap-1.5">
+                            <span class="font-display text-2xl font-bold text-primary tracking-tight group-hover:text-secondary transition-colors">Clause<span class="text-accent">Wise</span></span>
+                            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-teal-50 text-teal-700 border border-teal-200/80 shadow-2xs">AI</span>
+                        </div>
+                        <p class="text-[11px] text-muted font-medium tracking-normal -mt-0.5 hidden sm:block">Legal intelligence before you sign</p>
                     </div>
                 </a>
 
                 <!-- Navigation Links -->
                 <nav role="navigation" aria-label="Main navigation">
-                    <ul class="flex items-center space-x-1 sm:space-x-4">
+                    <ul class="flex items-center space-x-1 sm:space-x-2">
                         <li>
-                            <a href="{{ url_for('index') }}" class="px-3 py-2 rounded-md text-sm font-medium transition-colors {% if request.endpoint == 'index' or request.endpoint == 'analyze' %}text-primary bg-slate-100 font-semibold{% else %}text-slate-600 hover:text-primary hover:bg-slate-50{% endif %}">
-                                Analyze
+                            <a href="{{ url_for('index') }}" class="px-3.5 py-2 rounded-xl text-xs sm:text-sm font-medium transition-all {% if request.endpoint == 'index' or request.endpoint == 'analyze' %}text-primary bg-slate-100/90 font-semibold shadow-2xs border border-slate-200/60{% else %}text-slate-600 hover:text-primary hover:bg-slate-50{% endif %}">
+                                <span class="hidden sm:inline">📄 </span>Analyze
                             </a>
                         </li>
                         <li>
-                            <a href="{{ url_for('compare') }}" class="px-3 py-2 rounded-md text-sm font-medium transition-colors {% if request.endpoint == 'compare' %}text-primary bg-slate-100 font-semibold{% else %}text-slate-600 hover:text-primary hover:bg-slate-50{% endif %}">
-                                Compare
+                            <a href="{{ url_for('compare') }}" class="px-3.5 py-2 rounded-xl text-xs sm:text-sm font-medium transition-all {% if request.endpoint == 'compare' %}text-primary bg-slate-100/90 font-semibold shadow-2xs border border-slate-200/60{% else %}text-slate-600 hover:text-primary hover:bg-slate-50{% endif %}">
+                                <span class="hidden sm:inline">⚖️ </span>Compare
                             </a>
                         </li>
                         <li>
-                            <a href="{{ url_for('about') }}" class="px-3 py-2 rounded-md text-sm font-medium transition-colors {% if request.endpoint == 'about' %}text-primary bg-slate-100 font-semibold{% else %}text-slate-600 hover:text-primary hover:bg-slate-50{% endif %}">
-                                About
+                            <a href="{{ url_for('about') }}" class="px-3.5 py-2 rounded-xl text-xs sm:text-sm font-medium transition-all {% if request.endpoint == 'about' %}text-primary bg-slate-100/90 font-semibold shadow-2xs border border-slate-200/60{% else %}text-slate-600 hover:text-primary hover:bg-slate-50{% endif %}">
+                                <span class="hidden sm:inline">💡 </span>About
+                            </a>
+                        </li>
+                        <li class="pl-1 sm:pl-2">
+                            <a href="{{ url_for('analyze', sample='vendor_sla') }}" class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold bg-gradient-to-r from-primary to-secondary text-white hover:from-secondary hover:to-primary shadow-subtle hover:shadow-elevated transition-all">
+                                <span class="text-amber-400">⚡</span>
+                                <span class="hidden xs:inline">Interactive</span> Demo
                             </a>
                         </li>
                     </ul>
@@ -285,19 +363,19 @@
     </header>
 
     <!-- PROMINENT DISCLAIMER BANNER (Dismissible with vanilla JS) -->
-    <div id="disclaimer-banner" role="status" aria-live="polite" class="bg-[#FEF3C7] border-b border-amber-200 text-amber-900 transition-all duration-300">
+    <div id="disclaimer-banner" role="status" aria-live="polite" class="bg-gradient-to-r from-[#FFFBEB] via-[#FEF3C7] to-[#FFFBEB] border-b border-amber-200 text-amber-900 transition-all duration-300">
         <div class="max-w-7xl mx-auto py-2.5 px-4 sm:px-6 lg:px-8 flex items-center justify-between gap-3 text-xs sm:text-sm">
             <div class="flex items-center gap-2.5 flex-1">
-                <!-- Info circle icon -->
-                <svg class="w-4 h-4 sm:w-5 sm:h-5 text-amber-700 flex-shrink-0" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                <!-- Info circle icon with explicit dimensions -->
+                <svg class="w-4 h-4 sm:w-5 sm:h-5 text-amber-700 flex-shrink-0" width="20" height="20" style="width: 20px; height: 20px;" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
                     <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd" />
                 </svg>
-                <p class="leading-snug">
-                    <strong class="font-semibold text-amber-950">Notice:</strong> ClauseWise helps you understand documents and prepare questions for a lawyer. It does not provide legal advice and is not a substitute for professional counsel.
+                <p class="leading-snug text-amber-950">
+                    <strong class="font-bold">Important Notice:</strong> ClauseWise provides automated pre-review intelligence and lawyer question formulation. It does <em>not</em> provide formal legal advice and is not a substitute for licensed legal counsel.
                 </p>
             </div>
-            <button type="button" id="dismiss-disclaimer-btn" aria-label="Dismiss disclaimer reminder" class="p-1 rounded text-amber-700 hover:text-amber-950 hover:bg-amber-200/60 focus:outline-none focus:ring-2 focus:ring-amber-500 transition-colors">
-                <svg class="w-4 h-4" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+            <button type="button" id="dismiss-disclaimer-btn" aria-label="Dismiss disclaimer reminder" class="p-1 rounded-lg text-amber-700 hover:text-amber-950 hover:bg-amber-200/60 focus:outline-none focus:ring-2 focus:ring-amber-500 transition-colors">
+                <svg class="w-4 h-4" width="16" height="16" style="width: 16px; height: 16px;" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
                     <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" />
                 </svg>
             </button>
@@ -309,7 +387,7 @@
         {% if messages %}
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-4">
                 {% for category, message in messages %}
-                    <div class="p-4 rounded-md mb-3 flex items-center justify-between text-sm {% if category == 'danger' %}bg-red-50 text-red-800 border border-red-200{% elif category == 'warning' %}bg-amber-50 text-amber-800 border border-amber-200{% elif category == 'success' %}bg-green-50 text-green-800 border border-green-200{% else %}bg-blue-50 text-blue-800 border border-blue-200{% endif %}" role="alert">
+                    <div class="p-4 rounded-xl mb-3 flex items-center justify-between text-sm shadow-subtle {% if category == 'danger' %}bg-red-50 text-red-800 border border-red-200{% elif category == 'warning' %}bg-amber-50 text-amber-800 border border-amber-200{% elif category == 'success' %}bg-green-50 text-green-800 border border-green-200{% else %}bg-blue-50 text-blue-800 border border-blue-200{% endif %}" role="alert">
                         <span>{{ message }}</span>
                     </div>
                 {% endfor %}
@@ -318,23 +396,63 @@
     {% endwith %}
 
     <!-- Main Content Area -->
-    <main role="main" id="main-content" class="flex-grow w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
+    <main role="main" id="main-content" class="flex-grow w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-10">
         {% block content %}{% endblock %}
     </main>
 
     <!-- Footer -->
-    <footer role="contentinfo" class="bg-primary text-slate-300 border-t border-slate-800 mt-auto py-8">
+    <footer role="contentinfo" class="bg-primary text-slate-300 border-t border-slate-800/80 mt-auto py-10">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex flex-col md:flex-row items-center justify-between gap-4 text-center md:text-left text-xs sm:text-sm">
-                <div class="space-y-1">
-                    <p class="font-display font-medium text-white text-base">ClauseWise Legal Document Assistant</p>
-                    <p class="text-slate-400 max-w-2xl">
-                        ClauseWise provides information, not legal advice. For decisions with legal consequences, consult a licensed attorney in your jurisdiction.
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-8 pb-8 border-b border-slate-800/60 text-xs sm:text-sm">
+                <!-- Col 1: Brand -->
+                <div class="space-y-3 md:col-span-2">
+                    <div class="flex items-center gap-2.5">
+                        <div class="w-7 h-7 rounded-lg bg-teal-500/20 text-teal-400 flex items-center justify-center font-bold text-xs">
+                            §
+                        </div>
+                        <span class="font-display font-bold text-white text-lg tracking-tight">Clause<span class="text-accent">Wise</span> AI</span>
+                    </div>
+                    <p class="text-slate-400 text-xs leading-relaxed max-w-md">
+                        ClauseWise democratizes legal document understanding with ephemeral, privacy-first AI analysis. Extract terms, flag exposure vectors, and formulate exact questions for your legal counsel.
+                    </p>
+                    <div class="flex items-center gap-2 text-[11px] text-slate-400 pt-1">
+                        <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                        <span>Zero Data Retention • Memory-Only Analysis</span>
+                    </div>
+                </div>
+
+                <!-- Col 2: Navigation -->
+                <div class="space-y-2">
+                    <p class="font-semibold text-white text-xs uppercase tracking-wider">Navigation</p>
+                    <ul class="space-y-1.5 text-xs text-slate-400">
+                        <li><a href="{{ url_for('index') }}" class="hover:text-teal-400 transition-colors">Analyze Document</a></li>
+                        <li><a href="{{ url_for('compare') }}" class="hover:text-teal-400 transition-colors">Compare Two Versions</a></li>
+                        <li><a href="{{ url_for('about') }}" class="hover:text-teal-400 transition-colors">Methodology & About</a></li>
+                        <li><a href="{{ url_for('analyze', sample='vendor_sla') }}" class="hover:text-teal-400 transition-colors">Sample Contracts</a></li>
+                    </ul>
+                </div>
+
+                <!-- Col 3: Legal Disclaimers -->
+                <div class="space-y-2">
+                    <p class="font-semibold text-white text-xs uppercase tracking-wider">Compliance</p>
+                    <p class="text-slate-400 text-[11px] leading-relaxed">
+                        ClauseWise provides information, not legal advice. No attorney-client relationship is created. Consult a licensed lawyer for contract execution.
+                    </p>
+                    <p class="text-[11px] text-slate-500 pt-1">
+                        GenAI Legal Assistance Hackathon 2026
                     </p>
                 </div>
-                <div class="text-slate-400 md:text-right flex flex-col items-center md:items-end gap-1">
-                    <p>Built with: <span class="text-slate-200">Python, Flask, Google Gemini AI, Tailwind CSS</span></p>
-                    <p class="text-xs text-slate-500">&copy; 2026 ClauseWise. All rights reserved.</p>
+            </div>
+
+            <!-- Bottom Bar -->
+            <div class="pt-6 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-slate-400">
+                <p>&copy; 2026 ClauseWise AI. Developed for equitable legal access.</p>
+                <div class="flex items-center gap-4 text-xs">
+                    <span class="flex items-center gap-1.5"><span class="w-1.5 h-1.5 rounded-full bg-teal-400"></span> Google Gemini 1.5 Pro</span>
+                    <span class="text-slate-600">•</span>
+                    <span>Flask + Python 3.10</span>
+                    <span class="text-slate-600">•</span>
+                    <span>Tailwind CSS</span>
                 </div>
             </div>
         </div>

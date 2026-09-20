@@ -1,13 +1,15 @@
-"""Utility functions for file handling, caching, validation, and 
+"""Utility functions for file handling, caching, validation, and
 security helpers used across the ClauseWise application.
 """
 
 import hashlib
 import io
+import json
 import os
 import re
 import time
 from typing import Any, Dict, List, Optional
+import requests
 
 try:
     from pypdf import PdfReader
@@ -21,11 +23,38 @@ except ImportError:
 
 
 # ============================================================================
-# CONSTANTS
+# CONFIG & CONSTANTS
 # ============================================================================
 
 ALLOWED_EXTENSIONS = {"pdf", "docx", "txt"}
 MAX_FILE_SIZE_MB = 10
+BYTES_PER_MB = 1024 * 1024
+MAX_FILE_SIZE_BYTES = MAX_FILE_SIZE_MB * BYTES_PER_MB
+
+DEFAULT_MAX_AGE_SECONDS = 3600
+DEFAULT_PREVIEW_MAX_CHARS = 300
+CONFIDENCE_HIGH_THRESHOLD = 0.85
+CONFIDENCE_MEDIUM_THRESHOLD = 0.60
+PERCENTAGE_MULTIPLIER = 100
+
+DEFAULT_TIMEOUT_SECONDS = 30
+DEFAULT_TEMPERATURE = 0.2
+DEFAULT_MAX_OUTPUT_TOKENS = 4096
+DEFAULT_TEXT_MAX_TOKENS = 2048
+HTTP_STATUS_OK = 200
+
+GEMINI_MODEL = os.environ.get("GEMINI_MODEL", "gemini-1.5-flash")
+GEMINI_API_URL = (
+    f"https://generativelanguage.googleapis.com/v1beta/models/{GEMINI_MODEL}:generateContent"
+)
+
+CONFIG = {
+    "ALLOWED_EXTENSIONS": ALLOWED_EXTENSIONS,
+    "MAX_FILE_SIZE_MB": MAX_FILE_SIZE_MB,
+    "TIMEOUT_SECONDS": DEFAULT_TIMEOUT_SECONDS,
+    "TEMPERATURE": DEFAULT_TEMPERATURE,
+    "MAX_OUTPUT_TOKENS": DEFAULT_MAX_OUTPUT_TOKENS,
+}
 
 
 # ============================================================================
@@ -50,11 +79,27 @@ def allowed_file(filename: str) -> bool:
     return ext in ALLOWED_EXTENSIONS
 
 
+def _clean_traversal_tokens(filename: str) -> str:
+    """Helper to remove directory traversal tokens from a filename string.
+
+    Args:
+        filename: Filename string to clean.
+
+    Returns:
+        str: Cleaned string without traversal tokens.
+
+    Raises:
+        None.
+    """
+    sanitized = filename
+    while "../" in sanitized or "..\\" in sanitized:
+        sanitized = sanitized.replace("../", "").replace("..\\", "")
+    sanitized = sanitized.replace("/", "").replace("\\", "")
+    return sanitized
+
+
 def secure_filename_custom(filename: str) -> str:
     """Sanitizes a filename to prevent directory traversal and unsafe characters.
-
-    Strips path separators, rejects/strips directory traversal patterns (e.g. '../'),
-    and retains only alphanumeric characters, dashes, underscores, and dots.
 
     Args:
         filename: The original filename or path to sanitize.
@@ -67,36 +112,18 @@ def secure_filename_custom(filename: str) -> str:
     """
     if not filename:
         return ""
-
-    # Repeatedly strip directory traversal sequences like ../ and ..\
-    sanitized = filename
-    while "../" in sanitized or "..\\" in sanitized:
-        sanitized = sanitized.replace("../", "").replace("..\\", "")
-
-    # Strip path separators
-    sanitized = sanitized.replace("/", "").replace("\\", "")
-
-    # Keep only alphanumeric, dash, underscore, and dot
+    sanitized = _clean_traversal_tokens(filename)
     sanitized = re.sub(r"[^a-zA-Z0-9._-]", "", sanitized)
-
-    # Collapse multiple consecutive dots to prevent traversal
     while ".." in sanitized:
         sanitized = sanitized.replace("..", ".")
-
-    # Strip leading/trailing dots or spaces
-    sanitized = sanitized.strip(". ")
-
-    return sanitized
+    return sanitized.strip(". ")
 
 
 def generate_cache_key(*args: str) -> str:
     """Generates an MD5 hash cache key from any number of string arguments.
 
-    Computes an MD5 digest of the concatenated arguments for caching AI responses
-    and avoiding duplicate processing of identical documents.
-
     Args:
-        *args: Variable number of string arguments (e.g. document text, mode).
+        *args: Variable number of string arguments.
 
     Returns:
         str: Hexadecimal MD5 hash representing the cache key.
@@ -127,58 +154,43 @@ def validate_file_size(filepath: str, max_mb: int = MAX_FILE_SIZE_MB) -> bool:
         return False
     try:
         size_bytes = os.path.getsize(filepath)
-        return size_bytes <= max_mb * 1024 * 1024
+        return size_bytes <= max_mb * BYTES_PER_MB
     except OSError:
         return False
 
 
-def format_confidence_badge(score: float) -> dict:
+def format_confidence_badge(score: float) -> Dict[str, Any]:
     """Converts a confidence score (0.0-1.0) into display information.
 
     Args:
         score: Numerical confidence score between 0.0 and 1.0.
 
     Returns:
-        dict: A dictionary containing:
-            - 'label' (str): Descriptive confidence level text.
-            - 'color' (str): Badge theme color ('green', 'yellow', or 'red').
-            - 'percentage' (int): Score expressed as an integer percentage (0-100).
+        Dict[str, Any]: Dictionary containing label, color, and percentage.
 
     Raises:
         None.
     """
-    percentage = int(round(score * 100))
-    if score >= 0.85:
-        return {
-            "label": "High Confidence",
-            "color": "green",
-            "percentage": percentage,
-        }
-    elif score >= 0.6:
-        return {
-            "label": "Medium Confidence",
-            "color": "yellow",
-            "percentage": percentage,
-        }
-    else:
-        return {
-            "label": "Low Confidence - Review Carefully",
-            "color": "red",
-            "percentage": percentage,
-        }
+    pct = int(round(score * PERCENTAGE_MULTIPLIER))
+    if score >= CONFIDENCE_HIGH_THRESHOLD:
+        return {"label": "High Confidence", "color": "green", "percentage": pct}
+    if score >= CONFIDENCE_MEDIUM_THRESHOLD:
+        return {"label": "Medium Confidence", "color": "yellow", "percentage": pct}
+    return {
+        "label": "Low Confidence - Review Carefully",
+        "color": "red",
+        "percentage": pct,
+    }
 
 
-def format_risk_badge(risk_level: str) -> dict:
+def format_risk_badge(risk_level: str) -> Dict[str, str]:
     """Converts a risk_level string into display information.
 
     Args:
         risk_level: Risk level string ("low", "medium", or "high").
 
     Returns:
-        dict: A dictionary containing:
-            - 'label' (str): Descriptive risk badge text.
-            - 'color' (str): Theme color ('green', 'yellow', or 'red').
-            - 'icon' (str): Icon symbol ('✓' or '⚠').
+        Dict[str, str]: Dictionary containing label, color, and icon.
 
     Raises:
         None.
@@ -193,17 +205,13 @@ def format_risk_badge(risk_level: str) -> dict:
 
 
 def check_rate_limit(
-    ip: str, tracker: dict, max_requests: int, window_seconds: int
+    ip: str, tracker: Dict[str, List[float]], max_requests: int, window_seconds: int
 ) -> bool:
     """Generic rate limiter that checks and updates timestamps in place.
 
-    Takes a tracker dict mapping IP to a list of timestamps. Removes timestamps
-    older than window_seconds, checks if remaining count is below max_requests,
-    and appends current timestamp if allowed.
-
     Args:
         ip: Client IP address or unique requester identifier.
-        tracker: Dictionary mapping IP strings to lists of float timestamps (mutated in place).
+        tracker: Dictionary mapping IP strings to lists of float timestamps.
         max_requests: Maximum number of allowed requests in the time window.
         window_seconds: Window duration in seconds.
 
@@ -217,7 +225,6 @@ def check_rate_limit(
     cutoff = now - window_seconds
     timestamps = [t for t in tracker.get(ip, []) if t > cutoff]
     tracker[ip] = timestamps
-
     if len(timestamps) < max_requests:
         tracker[ip].append(now)
         return True
@@ -228,7 +235,7 @@ def sanitize_text_input(text: str, max_length: int) -> str:
     """Strips and truncates text input, removing null bytes and control characters.
 
     Args:
-        text: Input string to sanitize (e.g. a chat question about the document).
+        text: Input string to sanitize.
         max_length: Maximum permitted length in characters.
 
     Returns:
@@ -239,19 +246,39 @@ def sanitize_text_input(text: str, max_length: int) -> str:
     """
     if not text:
         return ""
-    # Remove null bytes and control characters (ASCII 0-31 and 127-159)
-    cleaned = re.sub(r"[\x00-\x1f\x7f-\x9f]", "", text)
-    cleaned = cleaned.strip()
+    cleaned = re.sub(r"[\x00-\x1f\x7f-\x9f]", "", text).strip()
     if max_length is not None and max_length >= 0:
         cleaned = cleaned[:max_length]
     return cleaned
 
 
-def cleanup_old_uploads(upload_folder: str, max_age_seconds: int = 3600) -> int:
-    """Deletes files in upload_folder older than max_age_seconds for privacy.
+def _clean_single_file(entry_path: str, now: float, max_age: int) -> bool:
+    """Helper to remove a file if it exceeds maximum age.
 
-    Safeguards privacy by removing uploaded legal documents after the retention period.
-    Handles missing or invalid directories gracefully.
+    Args:
+        entry_path: Path to the target file.
+        now: Current epoch timestamp.
+        max_age: Maximum file age in seconds.
+
+    Returns:
+        bool: True if removed successfully, False otherwise.
+
+    Raises:
+        None.
+    """
+    try:
+        if os.path.isfile(entry_path) and (now - os.path.getmtime(entry_path)) > max_age:
+            os.remove(entry_path)
+            return True
+    except OSError:
+        pass
+    return False
+
+
+def cleanup_old_uploads(
+    upload_folder: str, max_age_seconds: int = DEFAULT_MAX_AGE_SECONDS
+) -> int:
+    """Deletes files in upload_folder older than max_age_seconds for privacy.
 
     Args:
         upload_folder: Path to directory containing uploaded files.
@@ -259,47 +286,28 @@ def cleanup_old_uploads(upload_folder: str, max_age_seconds: int = 3600) -> int:
 
     Returns:
         int: Number of files successfully deleted.
-
-    Raises:
-        None.
     """
     if not upload_folder or not os.path.isdir(upload_folder):
         return 0
-
-    deleted_count = 0
-    now = time.time()
-
+    now, count = time.time(), 0
     try:
         for entry in os.listdir(upload_folder):
-            entry_path = os.path.join(upload_folder, entry)
-            if os.path.isfile(entry_path):
-                try:
-                    file_age = now - os.path.getmtime(entry_path)
-                    if file_age > max_age_seconds:
-                        os.remove(entry_path)
-                        deleted_count += 1
-                except OSError:
-                    continue
+            if _clean_single_file(os.path.join(upload_folder, entry), now, max_age_seconds):
+                count += 1
     except OSError:
-        return deleted_count
+        pass
+    return count
 
-    return deleted_count
 
-
-def redact_preview(text: str, max_chars: int = 300) -> str:
-    """Truncates document text to max_chars for safe preview display, adding '...' if truncated.
-
-    Used to avoid dumping entire sensitive documents into logs or error messages.
+def redact_preview(text: str, max_chars: int = DEFAULT_PREVIEW_MAX_CHARS) -> str:
+    """Truncates document text to max_chars for safe preview display.
 
     Args:
         text: Document text to preview.
-        max_chars: Maximum character count before truncation. Defaults to 300.
+        max_chars: Maximum character count before truncation.
 
     Returns:
         str: Safe preview text, with ellipsis added if truncated.
-
-    Raises:
-        None.
     """
     if not text:
         return ""
@@ -308,8 +316,265 @@ def redact_preview(text: str, max_chars: int = 300) -> str:
     return text[:max_chars] + "..."
 
 
+def clean_contract_text(text: str) -> str:
+    """Normalizes whitespace and standardizes line breaks in contract text.
+
+    Args:
+        text: Raw contract text to normalize.
+
+    Returns:
+        str: Normalized text with consistent newlines and stripped whitespace.
+    """
+    if not text:
+        return ""
+    text = text.replace("\r\n", "\n").replace("\r", "\n")
+    text = re.sub(r"\n{3,}", "\n\n", text)
+    return text.strip()
+
+
 # ============================================================================
-# DOCUMENT PARSING & SAMPLE CONTRACT DATA
+# FILE EXTRACTION HELPERS
+# ============================================================================
+
+def _extract_pdf_pages(stream: io.BytesIO) -> str:
+    """Extracts text from PDF stream using PdfReader.
+
+    Args:
+        stream: Byte stream of the PDF file.
+
+    Returns:
+        str: Joined text extracted from all PDF pages.
+
+    Raises:
+        RuntimeError: If pypdf is not installed.
+    """
+    if PdfReader is None:
+        raise RuntimeError("pypdf is not installed. Unable to process PDF files.")
+    reader = PdfReader(stream)
+    extracted = [page.extract_text() for page in reader.pages if page.extract_text()]
+    return "\n\n".join(extracted)
+
+
+def _extract_docx_paragraphs(stream: io.BytesIO) -> str:
+    """Extracts text from DOCX stream using python-docx.
+
+    Args:
+        stream: Byte stream of the DOCX file.
+
+    Returns:
+        str: Joined text extracted from document paragraphs.
+
+    Raises:
+        RuntimeError: If python-docx is not installed.
+    """
+    if docx is None:
+        raise RuntimeError("python-docx is not installed. Unable to process DOCX files.")
+    doc = docx.Document(stream)
+    paragraphs = [p.text for p in doc.paragraphs if p.text.strip()]
+    return "\n\n".join(paragraphs)
+
+
+def extract_text_from_file(file_storage: Any) -> str:
+    """Extracts plain text from an uploaded file storage object.
+
+    Args:
+        file_storage: File-like or Werkzeug FileStorage object to extract text from.
+
+    Returns:
+        str: Extracted document text.
+
+    Raises:
+        RuntimeError: If pypdf or python-docx is required but not installed.
+    """
+    filename = getattr(file_storage, "filename", "") or ""
+    ext = os.path.splitext(filename)[1].lower()
+    stream = io.BytesIO(file_storage.read())
+    file_storage.seek(0)
+    if ext == ".pdf":
+        return _extract_pdf_pages(stream)
+    if ext == ".docx":
+        return _extract_docx_paragraphs(stream)
+    raw_bytes = stream.getvalue()
+    try:
+        return raw_bytes.decode("utf-8")
+    except UnicodeDecodeError:
+        return raw_bytes.decode("latin-1", errors="replace")
+
+
+# ============================================================================
+# SHARED GEMINI API INTEGRATION
+# ============================================================================
+
+def _is_invalid_key(api_key: Optional[str]) -> bool:
+    """Helper to check whether a Gemini API key is missing or placeholder.
+
+    Args:
+        api_key: API key string to test.
+
+    Returns:
+        bool: True if key is empty or placeholder, False otherwise.
+    """
+    return not api_key or api_key.strip() == "" or api_key == "your_gemini_api_key_here"
+
+
+def _send_gemini_request(
+    payload: Dict[str, Any], api_key: str, timeout: int = DEFAULT_TIMEOUT_SECONDS
+) -> Optional[requests.Response]:
+    """Helper to dispatch HTTP POST request to Gemini API.
+
+    Args:
+        payload: Dict payload sent to the API.
+        api_key: Google Gemini API key.
+        timeout: Request timeout in seconds. Defaults to 30.
+
+    Returns:
+        Optional[requests.Response]: Response object if request succeeds, None on error.
+    """
+    headers = {"Content-Type": "application/json"}
+    url = f"{GEMINI_API_URL}?key={api_key}"
+    try:
+        return requests.post(url, headers=headers, json=payload, timeout=timeout)
+    except Exception:
+        return None
+
+
+def _parse_candidate_text(response: requests.Response) -> Optional[str]:
+    """Helper to parse first candidate output text from Gemini response.
+
+    Args:
+        response: Response object returned from Gemini API call.
+
+    Returns:
+        Optional[str]: Clean candidate text if found, None otherwise.
+    """
+    if response.status_code != HTTP_STATUS_OK:
+        return None
+    try:
+        data = response.json()
+        candidates = data.get("candidates", [])
+        if candidates:
+            parts = candidates[0].get("content", {}).get("parts", [])
+            if parts:
+                return parts[0].get("text", "")
+    except Exception:
+        pass
+    return None
+
+
+def _build_gemini_json_payload(
+    prompt: str, system_instruction: Optional[str]
+) -> Dict[str, Any]:
+    """Builds payload for JSON mode Gemini request.
+
+    Args:
+        prompt: User prompt text.
+        system_instruction: Optional system instruction.
+
+    Returns:
+        Dict[str, Any]: Formatted request payload.
+    """
+    payload: Dict[str, Any] = {
+        "contents": [{"parts": [{"text": prompt}]}],
+        "generationConfig": {
+            "response_mime_type": "application/json",
+            "temperature": DEFAULT_TEMPERATURE,
+            "maxOutputTokens": DEFAULT_MAX_OUTPUT_TOKENS,
+        },
+    }
+    if system_instruction:
+        payload["systemInstruction"] = {"parts": [{"text": system_instruction}]}
+    return payload
+
+
+def _build_gemini_text_payload(
+    prompt: str, system_instruction: Optional[str]
+) -> Dict[str, Any]:
+    """Builds payload for text generation Gemini request.
+
+    Args:
+        prompt: User prompt text.
+        system_instruction: Optional system instruction.
+
+    Returns:
+        Dict[str, Any]: Formatted request payload.
+    """
+    payload: Dict[str, Any] = {
+        "contents": [{"parts": [{"text": prompt}]}],
+        "generationConfig": {
+            "temperature": DEFAULT_TEMPERATURE,
+            "maxOutputTokens": DEFAULT_TEXT_MAX_TOKENS,
+        },
+    }
+    if system_instruction:
+        payload["systemInstruction"] = {"parts": [{"text": system_instruction}]}
+    return payload
+
+
+def _parse_json_markdown(raw_text: str) -> Optional[Dict[str, Any]]:
+    """Extracts and parses JSON from markdown code block or raw text.
+
+    Args:
+        raw_text: String response possibly wrapped in markdown fence.
+
+    Returns:
+        Optional[Dict[str, Any]]: Parsed JSON dictionary, or None on error.
+    """
+    text_clean = re.sub(r"^```(?:json)?\s*", "", raw_text.strip(), flags=re.IGNORECASE)
+    text_clean = re.sub(r"\s*```$", "", text_clean)
+    try:
+        return json.loads(text_clean)
+    except Exception:
+        return None
+
+
+def call_gemini_api(
+    prompt: str, api_key: str, system_instruction: Optional[str] = None
+) -> Optional[Dict[str, Any]]:
+    """Calls Google Gemini API with prompt and returns parsed JSON response.
+
+    Args:
+        prompt: User prompt sent to the Gemini model.
+        api_key: Google Gemini API key.
+        system_instruction: Optional system instruction for the model.
+
+    Returns:
+        Optional[Dict[str, Any]]: Parsed JSON dictionary, or None if failed.
+    """
+    if _is_invalid_key(api_key):
+        return None
+    payload = _build_gemini_json_payload(prompt, system_instruction)
+    resp = _send_gemini_request(payload, api_key, timeout=DEFAULT_TIMEOUT_SECONDS)
+    if not resp:
+        return None
+    raw_text = _parse_candidate_text(resp)
+    return _parse_json_markdown(raw_text) if raw_text else None
+
+
+def call_gemini_text(
+    prompt: str, api_key: str, system_instruction: Optional[str] = None
+) -> Optional[str]:
+    """Calls Gemini API directly and returns an unstructured text response.
+
+    Args:
+        prompt: User prompt containing document context and question.
+        api_key: Google Gemini API key.
+        system_instruction: Optional system instruction for grounding.
+
+    Returns:
+        Optional[str]: Response text from Gemini, or None if unavailable.
+    """
+    if _is_invalid_key(api_key):
+        return None
+    payload = _build_gemini_text_payload(prompt, system_instruction)
+    resp = _send_gemini_request(payload, api_key, timeout=DEFAULT_TIMEOUT_SECONDS)
+    if not resp:
+        return None
+    text_out = _parse_candidate_text(resp)
+    return text_out.strip() if text_out else None
+
+
+# ============================================================================
+# SAMPLE CONTRACT DATA
 # ============================================================================
 
 SAMPLE_CONTRACTS: Dict[str, Dict[str, str]] = {
@@ -410,70 +675,3 @@ This Agreement is governed by the laws of California. Any disputes shall be subm
 """
     }
 }
-
-
-def extract_text_from_file(file_storage) -> str:
-    """Extracts plain text from an uploaded file storage object.
-
-    Supports PDF (.pdf), Word (.docx), and plain text (.txt, .md).
-
-    Args:
-        file_storage: File-like or Werkzeug FileStorage object to extract text from.
-
-    Returns:
-        str: Extracted document text.
-
-    Raises:
-        RuntimeError: If pypdf or python-docx is required but not installed.
-    """
-    filename = getattr(file_storage, "filename", "") or ""
-    ext = os.path.splitext(filename)[1].lower()
-
-    stream = io.BytesIO(file_storage.read())
-    file_storage.seek(0)  # reset pointer
-
-    if ext == ".pdf":
-        if PdfReader is None:
-            raise RuntimeError("pypdf is not installed. Unable to process PDF files.")
-        reader = PdfReader(stream)
-        extracted = []
-        for i, page in enumerate(reader.pages):
-            page_text = page.extract_text()
-            if page_text:
-                extracted.append(page_text)
-        return "\n\n".join(extracted)
-
-    elif ext == ".docx":
-        if docx is None:
-            raise RuntimeError("python-docx is not installed. Unable to process DOCX files.")
-        doc = docx.Document(stream)
-        paragraphs = [p.text for p in doc.paragraphs if p.text.strip()]
-        return "\n\n".join(paragraphs)
-
-    else:
-        # Default to utf-8 text with fallback
-        raw_bytes = stream.getvalue()
-        try:
-            return raw_bytes.decode("utf-8")
-        except UnicodeDecodeError:
-            return raw_bytes.decode("latin-1", errors="replace")
-
-
-def clean_contract_text(text: str) -> str:
-    """Normalizes whitespace and standardizes line breaks in contract text.
-
-    Args:
-        text: Raw contract text to normalize.
-
-    Returns:
-        str: Normalized text with consistent newlines and stripped whitespace.
-
-    Raises:
-        None.
-    """
-    if not text:
-        return ""
-    text = text.replace("\r\n", "\n").replace("\r", "\n")
-    # Collapse 3+ consecutive newlines to 2
-    text = re.sub(r"\n{3,}", "\n\n", text)
-    return text.strip()

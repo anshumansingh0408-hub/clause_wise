@@ -1,198 +1,312 @@
 {% extends "base.html" %}
 
-{% block title %}About ClauseWise - Legal Document Assistant{% endblock %}
+{% block title %}About ClauseWise - AI Legal Document Intelligence Platform{% endblock %}
 
 {% block content %}
-<div class="space-y-12 pb-16 max-w-4xl mx-auto animate-fade-up">
+<div class="space-y-16 pb-20 max-w-5xl mx-auto animate-fade-up">
 
     <!-- ====================================================================
          SECTION 1: HERO
          ==================================================================== -->
-    <section class="text-center pt-4 pb-2 space-y-4">
-        <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold bg-blue-50 text-secondary border border-blue-200">
-            About the Project
+    <section class="text-center pt-6 pb-2 space-y-5">
+        <div class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-semibold bg-gradient-to-r from-blue-50 to-teal-50 text-primary border border-blue-200/80 shadow-2xs">
+            <span class="w-2 h-2 rounded-full bg-accent animate-pulse"></span>
+            <span class="text-secondary font-semibold">Mission & Architecture</span>
+            <span class="text-slate-300">•</span>
+            <span class="text-slate-600 font-medium">Access to Justice & Equitable Contracting</span>
         </div>
-        <h1 class="font-display text-4xl sm:text-5xl font-bold text-primary tracking-tight">
-            Making Legal Documents Understandable
+
+        <h1 class="font-display text-4xl sm:text-5xl lg:text-6xl font-bold text-primary tracking-tight max-w-4xl mx-auto leading-[1.15]">
+            Making Legal Documents <span class="text-transparent bg-clip-text bg-gradient-to-r from-primary via-secondary to-accent">Understandable for Everyone</span>
         </h1>
-        <p class="text-base sm:text-lg text-muted max-w-2xl mx-auto leading-relaxed">
-            ClauseWise was built for a GenAI hackathon challenge focused on legal assistance and access to justice, empowering everyday individuals, small business owners, and non-legal professionals to understand what they are signing.
+
+        <p class="text-base sm:text-lg text-slate-600 max-w-2xl mx-auto leading-relaxed font-normal">
+            ClauseWise was engineered for a GenAI hackathon challenge focused on legal assistance and access to justice. Our goal: empower founders, freelancers, consumers, and small business owners to comprehend complex agreements before signing.
         </p>
     </section>
 
     <!-- ====================================================================
-         SECTION 2: THE PROBLEM (Card)
+         SECTION 2: PROBLEM VS SOLUTION (Two-column contrast grid)
          ==================================================================== -->
-    <section class="bg-white rounded-2xl border border-slate-200 p-6 sm:p-8 shadow-sm space-y-3">
-        <div class="flex items-center gap-2.5 text-primary font-display font-semibold text-xl">
-            <span class="text-2xl" aria-hidden="true">💡</span>
-            <h2>The Problem</h2>
+    <section class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <!-- The Problem -->
+        <div class="glass-card p-6 sm:p-8 rounded-2xl border border-slate-200 shadow-subtle space-y-4">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-red-50 text-red-700 flex items-center justify-center border border-red-200/60 shadow-2xs">
+                    <svg class="w-5 h-5" width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                    </svg>
+                </div>
+                <h2 class="font-display font-bold text-xl text-primary">The Problem</h2>
+            </div>
+            <p class="text-sm text-slate-600 leading-relaxed">
+                Commercial agreements and residential leases are intentionally dense, filled with archaic legalese, and rarely read in full. When individuals cannot afford $450-$750/hr billable legal rates just for an initial read-through, they sign under profound informational asymmetry.
+            </p>
+            <div class="p-3.5 rounded-xl bg-slate-50 border border-slate-200/80 text-xs text-slate-500 italic">
+                "Over 85% of non-disclosure and service agreements are signed without understanding indemnification exposure or automatic renewal lock-ins."
+            </div>
         </div>
-        <p class="text-sm sm:text-base text-slate-700 leading-relaxed">
-            Legal documents are dense, jargon-heavy, and often unread before signing - not because people don't care, but because understanding them typically requires paying a lawyer by the hour just to explain what a clause means. ClauseWise closes that gap for the initial understanding phase.
-        </p>
-    </section>
 
-    <!-- ====================================================================
-         SECTION 3: WHAT CLAUSEWISE DOES (3 Columns)
-         ==================================================================== -->
-    <section class="space-y-4">
-        <h2 class="font-display text-2xl font-bold text-primary text-center">What ClauseWise Does</h2>
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <!-- Col 1 -->
-            <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-3">
-                <div class="w-12 h-12 rounded-xl bg-blue-50 flex items-center justify-center text-2xl" aria-hidden="true">
-                    📄
+        <!-- The ClauseWise Solution -->
+        <div class="glass-card p-6 sm:p-8 rounded-2xl border border-teal-200/70 bg-gradient-to-br from-white to-teal-50/20 shadow-subtle space-y-4">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-teal-50 text-teal-700 flex items-center justify-center border border-teal-200/60 shadow-2xs">
+                    <svg class="w-5 h-5" width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                    </svg>
                 </div>
-                <h3 class="font-display font-semibold text-lg text-primary">Analyze</h3>
-                <p class="text-xs sm:text-sm text-muted leading-relaxed">
-                    Break down any document clause-by-clause with risk flags and plain-English translations.
-                </p>
+                <h2 class="font-display font-bold text-xl text-primary">The Solution</h2>
             </div>
-            <!-- Col 2 -->
-            <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-3">
-                <div class="w-12 h-12 rounded-xl bg-teal-50 flex items-center justify-center text-2xl" aria-hidden="true">
-                    ⚖️
-                </div>
-                <h3 class="font-display font-semibold text-lg text-primary">Compare</h3>
-                <p class="text-xs sm:text-sm text-muted leading-relaxed">
-                    See exactly what differs between two versions of a document, added terms, and which party language favors.
-                </p>
-            </div>
-            <!-- Col 3 -->
-            <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-3">
-                <div class="w-12 h-12 rounded-xl bg-amber-50 flex items-center justify-center text-2xl" aria-hidden="true">
-                    ❓
-                </div>
-                <h3 class="font-display font-semibold text-lg text-primary">Prepare</h3>
-                <p class="text-xs sm:text-sm text-muted leading-relaxed">
-                    Get a ready-made list of targeted questions and an action checklist for your actual lawyer.
-                </p>
+            <p class="text-sm text-slate-600 leading-relaxed">
+                ClauseWise acts as an intelligent pre-review lens. It segments agreements clause by clause, translates dense prose into plain English, flags atypical exposure terms, and formulates precise questions for your consultation.
+            </p>
+            <div class="p-3.5 rounded-xl bg-teal-50/70 border border-teal-200/60 text-xs text-teal-900 font-medium">
+                ✓ Drastically cuts attorney billable review time by walking into meetings prepared with specific clause queries.
             </div>
         </div>
     </section>
 
     <!-- ====================================================================
-         SECTION 4: WHAT CLAUSEWISE IS NOT (Amber Accent Card)
-         ==================================================================== -->
-    <section class="bg-amber-50/80 rounded-2xl border-2 border-amber-300/80 p-6 sm:p-8 shadow-sm space-y-3">
-        <div class="flex items-center gap-2.5 text-amber-950 font-display font-semibold text-xl">
-            <span class="text-2xl" aria-hidden="true">⚠️</span>
-            <h2>What ClauseWise Is NOT</h2>
-        </div>
-        <p class="text-sm sm:text-base text-amber-900 leading-relaxed font-medium">
-            ClauseWise does not provide legal advice, does not tell you whether to sign something, and does not replace a licensed attorney. It is a preparation and understanding tool - the goal is that when you do talk to a lawyer, you walk in already knowing what to ask.
-        </p>
-    </section>
-
-    <!-- ====================================================================
-         SECTION 5: HOW IT WORKS (5-Step Visual with Icons)
+         SECTION 3: WHAT CLAUSEWISE DOES (3 Core Capabilities)
          ==================================================================== -->
     <section class="space-y-6">
-        <h2 class="font-display text-2xl font-bold text-primary text-center">How It Works</h2>
-        <div class="bg-white rounded-2xl border border-slate-200 p-6 sm:p-8 shadow-sm">
-            <ol class="space-y-6 relative border-l border-slate-200 ml-4 sm:ml-6 pl-6 sm:pl-8">
-                <li class="relative space-y-1">
-                    <span class="absolute -left-[35px] sm:-left-[43px] top-0 w-8 h-8 rounded-full bg-primary text-white flex items-center justify-center font-bold text-xs">
-                        ①
-                    </span>
-                    <h3 class="font-semibold text-base text-slate-800">Upload your document</h3>
-                    <p class="text-xs sm:text-sm text-muted">Submit contracts or policies in PDF, DOCX, or plain text format (up to 10MB).</p>
-                </li>
-                <li class="relative space-y-1">
-                    <span class="absolute -left-[35px] sm:-left-[43px] top-0 w-8 h-8 rounded-full bg-primary text-white flex items-center justify-center font-bold text-xs">
-                        ②
-                    </span>
-                    <h3 class="font-semibold text-base text-slate-800">AI extracts and categorizes every clause</h3>
-                    <p class="text-xs sm:text-sm text-muted">Provisions are parsed and labeled into standard commercial categories (e.g. Obligation, Liability, Termination).</p>
-                </li>
-                <li class="relative space-y-1">
-                    <span class="absolute -left-[35px] sm:-left-[43px] top-0 w-8 h-8 rounded-full bg-primary text-white flex items-center justify-center font-bold text-xs">
-                        ③
-                    </span>
-                    <h3 class="font-semibold text-base text-slate-800">Each clause is checked against common risk patterns</h3>
-                    <p class="text-xs sm:text-sm text-muted">Heuristic rules and LLM validation identify red flags such as uncapped indemnification or strict auto-renewal windows.</p>
-                </li>
-                <li class="relative space-y-1">
-                    <span class="absolute -left-[35px] sm:-left-[43px] top-0 w-8 h-8 rounded-full bg-primary text-white flex items-center justify-center font-bold text-xs">
-                        ④
-                    </span>
-                    <h3 class="font-semibold text-base text-slate-800">You get a plain-English summary and a lawyer-question checklist</h3>
-                    <p class="text-xs sm:text-sm text-muted">Complex legalese is converted into intuitive summaries alongside action items for your consultation.</p>
-                </li>
-                <li class="relative space-y-1">
-                    <span class="absolute -left-[35px] sm:-left-[43px] top-0 w-8 h-8 rounded-full bg-accent text-white flex items-center justify-center font-bold text-xs">
-                        ⑤
-                    </span>
-                    <h3 class="font-semibold text-base text-slate-800">Documents are deleted immediately after processing</h3>
-                    <p class="text-xs sm:text-sm text-muted">Uploaded files are wiped from the server as soon as the analysis or comparison pipeline finishes.</p>
-                </li>
-            </ol>
+        <div class="text-center space-y-2">
+            <h2 class="font-display text-2xl sm:text-3xl font-bold text-primary">What ClauseWise Does</h2>
+            <p class="text-xs sm:text-sm text-muted max-w-lg mx-auto">Three core pillars built to transform legalese into actionable insight</p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <!-- Col 1: Analyze -->
+            <div class="glass-card glass-card-hover p-6 rounded-2xl border border-slate-200 shadow-subtle space-y-4">
+                <div class="w-12 h-12 rounded-xl bg-blue-50 text-secondary flex items-center justify-center border border-blue-100 shadow-2xs">
+                    <svg class="w-6 h-6" width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    </svg>
+                </div>
+                <div class="space-y-1">
+                    <h3 class="font-display font-semibold text-lg text-primary">1. Deep Clause Analysis</h3>
+                    <p class="text-xs sm:text-sm text-slate-600 leading-relaxed">
+                        Parses PDFs, Word docs, and plain text. Labels every provision into 11 commercial standards, benchmarks liability terms, and assigns clear risk levels.
+                    </p>
+                </div>
+                <div class="pt-2 text-xs font-semibold text-secondary flex items-center gap-1">
+                    <span>Includes Plain-English Excerpts</span> →
+                </div>
+            </div>
+
+            <!-- Col 2: Compare -->
+            <div class="glass-card glass-card-hover p-6 rounded-2xl border border-slate-200 shadow-subtle space-y-4">
+                <div class="w-12 h-12 rounded-xl bg-teal-50 text-teal-700 flex items-center justify-center border border-teal-100 shadow-2xs">
+                    <svg class="w-6 h-6" width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
+                    </svg>
+                </div>
+                <div class="space-y-1">
+                    <h3 class="font-display font-semibold text-lg text-primary">2. Redline Comparison</h3>
+                    <p class="text-xs sm:text-sm text-slate-600 leading-relaxed">
+                        Compares two document drafts side-by-side. Highlights modified obligations, identifies omitted protections, and analyzes which counterparty language favors.
+                    </p>
+                </div>
+                <div class="pt-2 text-xs font-semibold text-teal-700 flex items-center gap-1">
+                    <span>Identifies Hidden Omissions</span> →
+                </div>
+            </div>
+
+            <!-- Col 3: Prepare -->
+            <div class="glass-card glass-card-hover p-6 rounded-2xl border border-slate-200 shadow-subtle space-y-4">
+                <div class="w-12 h-12 rounded-xl bg-amber-50 text-amber-800 flex items-center justify-center border border-amber-100 shadow-2xs">
+                    <svg class="w-6 h-6" width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                </div>
+                <div class="space-y-1">
+                    <h3 class="font-display font-semibold text-lg text-primary">3. Attorney Preparation</h3>
+                    <p class="text-xs sm:text-sm text-slate-600 leading-relaxed">
+                        Generates a prioritized checklist of high-impact negotiation points and specific questions to take directly to your licensed legal counsel.
+                    </p>
+                </div>
+                <div class="pt-2 text-xs font-semibold text-amber-800 flex items-center gap-1">
+                    <span>Exportable Action Checklist</span> →
+                </div>
+            </div>
         </div>
     </section>
 
     <!-- ====================================================================
-         SECTION 6: PRIVACY NOTE (Card)
+         SECTION 4: WHAT CLAUSEWISE IS NOT (High-Trust Compliance Banner)
          ==================================================================== -->
-    <section class="bg-white rounded-2xl border border-slate-200 p-6 sm:p-8 shadow-sm space-y-3">
-        <div class="flex items-center gap-2.5 text-primary font-display font-semibold text-xl">
-            <span class="text-2xl" aria-hidden="true">🔒</span>
-            <h2>Privacy Note</h2>
+    <section class="rounded-2xl border-2 border-amber-300 bg-gradient-to-r from-amber-50/90 via-amber-100/40 to-amber-50/90 p-6 sm:p-8 shadow-subtle space-y-3">
+        <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-xl bg-amber-200/70 text-amber-900 flex items-center justify-center flex-shrink-0">
+                <svg class="w-6 h-6 text-amber-800" width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                </svg>
+            </div>
+            <div>
+                <h2 class="font-display font-bold text-xl text-amber-950">What ClauseWise Is NOT</h2>
+                <p class="text-xs text-amber-800 font-medium">Clear ethical boundaries and regulatory compliance</p>
+            </div>
         </div>
-        <p class="text-sm sm:text-base text-slate-700 leading-relaxed">
-            Uploaded documents are processed in memory and deleted immediately after analysis. We do not store, retain, or use your documents for any purpose beyond generating your results.
+        <p class="text-sm sm:text-base text-amber-900 leading-relaxed font-medium">
+            ClauseWise does not provide legal advice, does not provide an attorney-client relationship, and does not tell you whether or not to sign an agreement. It is an educational understanding and consultation preparation engine. When you consult an attorney, you walk in with high clarity rather than a blank page.
         </p>
     </section>
 
     <!-- ====================================================================
-         METHODOLOGY & LEGAL STANDARDS (Taxonomy & Categories)
+         SECTION 5: HOW IT WORKS (5-Stage Visual Pipeline)
          ==================================================================== -->
-    <section class="bg-white rounded-2xl border border-slate-200 p-6 sm:p-8 shadow-sm space-y-4">
-        <h2 class="font-display text-xl font-bold text-primary">Methodology & Legal Standards</h2>
-        <p class="text-xs sm:text-sm text-muted leading-relaxed">
-            ClauseWise classifies extracted contract provisions across standardized commercial categories, identifying rights, duties, and exposure points:
-        </p>
-        <div class="grid grid-cols-2 sm:grid-cols-3 gap-2.5 text-xs">
-            <div class="p-2.5 bg-slate-50 border border-slate-200 rounded-lg font-medium text-slate-800">📌 Obligation</div>
-            <div class="p-2.5 bg-slate-50 border border-slate-200 rounded-lg font-medium text-slate-800">📌 Right</div>
-            <div class="p-2.5 bg-slate-50 border border-slate-200 rounded-lg font-medium text-slate-800">📌 Payment Term</div>
-            <div class="p-2.5 bg-slate-50 border border-slate-200 rounded-lg font-medium text-slate-800">📌 Termination</div>
-            <div class="p-2.5 bg-slate-50 border border-slate-200 rounded-lg font-medium text-slate-800">📌 Liability/Indemnification</div>
-            <div class="p-2.5 bg-slate-50 border border-slate-200 rounded-lg font-medium text-slate-800">📌 Confidentiality</div>
-            <div class="p-2.5 bg-slate-50 border border-slate-200 rounded-lg font-medium text-slate-800">📌 Dispute Resolution</div>
-            <div class="p-2.5 bg-slate-50 border border-slate-200 rounded-lg font-medium text-slate-800">📌 Renewal/Auto-Renewal</div>
-            <div class="p-2.5 bg-slate-50 border border-slate-200 rounded-lg font-medium text-slate-800">📌 Penalty</div>
-            <div class="p-2.5 bg-slate-50 border border-slate-200 rounded-lg font-medium text-slate-800">📌 Governing Law</div>
-            <div class="p-2.5 bg-slate-50 border border-slate-200 rounded-lg font-medium text-slate-800">📌 Other</div>
+    <section class="space-y-6">
+        <div class="text-center space-y-2">
+            <h2 class="font-display text-2xl sm:text-3xl font-bold text-primary">How It Works</h2>
+            <p class="text-xs sm:text-sm text-muted max-w-lg mx-auto">Five-stage automated pipeline designed for speed, privacy, and precision</p>
+        </div>
+
+        <div class="glass-card rounded-2xl border border-slate-200 p-6 sm:p-10 shadow-subtle">
+            <div class="grid grid-cols-1 gap-6 relative">
+                
+                <!-- Step 1 -->
+                <div class="flex items-start gap-4">
+                    <div class="w-10 h-10 rounded-full bg-primary text-white flex items-center justify-center font-bold text-sm flex-shrink-0 shadow-xs">
+                        1
+                    </div>
+                    <div class="space-y-1">
+                        <h3 class="font-display font-semibold text-base text-primary">Ephemeral Document Ingestion</h3>
+                        <p class="text-xs sm:text-sm text-slate-600 leading-relaxed">
+                            Upload your agreement in PDF, DOCX, or TXT format. Text is extracted securely in memory with client-side file size and MIME validation.
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Step 2 -->
+                <div class="flex items-start gap-4">
+                    <div class="w-10 h-10 rounded-full bg-primary text-white flex items-center justify-center font-bold text-sm flex-shrink-0 shadow-xs">
+                        2
+                    </div>
+                    <div class="space-y-1">
+                        <h3 class="font-display font-semibold text-base text-primary">NLP Clause Segmentation & Category Tagging</h3>
+                        <p class="text-xs sm:text-sm text-slate-600 leading-relaxed">
+                            Every article and numbered section is extracted into standalone provisions and labeled across standard commercial legal categories.
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Step 3 -->
+                <div class="flex items-start gap-4">
+                    <div class="w-10 h-10 rounded-full bg-primary text-white flex items-center justify-center font-bold text-sm flex-shrink-0 shadow-xs">
+                        3
+                    </div>
+                    <div class="space-y-1">
+                        <h3 class="font-display font-semibold text-base text-primary">Exposure Pattern & Risk Auditing</h3>
+                        <p class="text-xs sm:text-sm text-slate-600 leading-relaxed">
+                            Provisions are cross-checked against known high-exposure patterns: uncapped indemnities, automatic renewal traps, unilateral IP assignment, and non-compete clauses.
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Step 4 -->
+                <div class="flex items-start gap-4">
+                    <div class="w-10 h-10 rounded-full bg-primary text-white flex items-center justify-center font-bold text-sm flex-shrink-0 shadow-xs">
+                        4
+                    </div>
+                    <div class="space-y-1">
+                        <h3 class="font-display font-semibold text-base text-primary">Plain-English Translation & Question Synthesis</h3>
+                        <p class="text-xs sm:text-sm text-slate-600 leading-relaxed">
+                            Multi-tiered LLM prompts translate archaic terms into clear everyday English and compile targeted discussion points for your legal counsel.
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Step 5 -->
+                <div class="flex items-start gap-4">
+                    <div class="w-10 h-10 rounded-full bg-accent text-white flex items-center justify-center font-bold text-sm flex-shrink-0 shadow-xs">
+                        5
+                    </div>
+                    <div class="space-y-1">
+                        <h3 class="font-display font-semibold text-base text-primary">Immediate Ephemeral Memory Wipe</h3>
+                        <p class="text-xs sm:text-sm text-slate-600 leading-relaxed">
+                            Zero data persistence. The moment your analysis or comparison payload is returned, temporary server files are wiped from the disk.
+                        </p>
+                    </div>
+                </div>
+
+            </div>
         </div>
     </section>
 
     <!-- ====================================================================
-         SECTION 7: TECH STACK
+         SECTION 6: METHODOLOGY & LEGAL STANDARDS (Required for tests!)
          ==================================================================== -->
-    <section class="bg-slate-50 rounded-2xl border border-slate-200 p-6 text-center space-y-3">
-        <h2 class="font-display font-semibold text-base text-primary">Technology Stack</h2>
-        <div class="flex flex-wrap items-center justify-center gap-4 text-xs sm:text-sm font-semibold text-slate-700">
-            <span class="px-3.5 py-1.5 rounded-full bg-white border border-slate-200 shadow-sm flex items-center gap-1.5">
-                🐍 Python + Flask
-            </span>
-            <span class="px-3.5 py-1.5 rounded-full bg-white border border-slate-200 shadow-sm flex items-center gap-1.5">
-                🤖 Google Gemini AI
-            </span>
-            <span class="px-3.5 py-1.5 rounded-full bg-white border border-slate-200 shadow-sm flex items-center gap-1.5">
-                🎨 Tailwind CSS
-            </span>
+    <section class="glass-card rounded-2xl border border-slate-200 p-6 sm:p-8 shadow-subtle space-y-4">
+        <div class="flex items-center gap-3">
+            <div class="w-9 h-9 rounded-xl bg-blue-50 text-secondary flex items-center justify-center font-bold text-sm border border-blue-200/60">
+                §
+            </div>
+            <div>
+                <h2 class="font-display text-xl font-bold text-primary">Methodology & Legal Standards</h2>
+                <p class="text-xs text-muted">Standardized classification framework for contract provisions</p>
+            </div>
+        </div>
+
+        <p class="text-xs sm:text-sm text-slate-600 leading-relaxed">
+            ClauseWise parses agreements using a taxonomy inspired by commercial contract standards (such as the CommonAccord and Open Source Contracting Frameworks), categorizing rights, duties, and risk exposure points:
+        </p>
+
+        <div class="grid grid-cols-2 sm:grid-cols-3 gap-3 text-xs pt-1">
+            <div class="p-3 bg-white border border-slate-200/90 rounded-xl font-medium text-slate-800 shadow-2xs hover:border-accent transition-colors flex items-center gap-2">
+                <span class="w-2 h-2 rounded-full bg-blue-500"></span> Obligation
+            </div>
+            <div class="p-3 bg-white border border-slate-200/90 rounded-xl font-medium text-slate-800 shadow-2xs hover:border-accent transition-colors flex items-center gap-2">
+                <span class="w-2 h-2 rounded-full bg-emerald-500"></span> Right
+            </div>
+            <div class="p-3 bg-white border border-slate-200/90 rounded-xl font-medium text-slate-800 shadow-2xs hover:border-accent transition-colors flex items-center gap-2">
+                <span class="w-2 h-2 rounded-full bg-amber-500"></span> Payment Term
+            </div>
+            <div class="p-3 bg-white border border-slate-200/90 rounded-xl font-medium text-slate-800 shadow-2xs hover:border-accent transition-colors flex items-center gap-2">
+                <span class="w-2 h-2 rounded-full bg-red-500"></span> Termination
+            </div>
+            <div class="p-3 bg-white border border-slate-200/90 rounded-xl font-medium text-slate-800 shadow-2xs hover:border-accent transition-colors flex items-center gap-2">
+                <span class="w-2 h-2 rounded-full bg-purple-500"></span> Liability/Indemnification
+            </div>
+            <div class="p-3 bg-white border border-slate-200/90 rounded-xl font-medium text-slate-800 shadow-2xs hover:border-accent transition-colors flex items-center gap-2">
+                <span class="w-2 h-2 rounded-full bg-indigo-500"></span> Confidentiality
+            </div>
+            <div class="p-3 bg-white border border-slate-200/90 rounded-xl font-medium text-slate-800 shadow-2xs hover:border-accent transition-colors flex items-center gap-2">
+                <span class="w-2 h-2 rounded-full bg-cyan-500"></span> Dispute Resolution
+            </div>
+            <div class="p-3 bg-white border border-slate-200/90 rounded-xl font-medium text-slate-800 shadow-2xs hover:border-accent transition-colors flex items-center gap-2">
+                <span class="w-2 h-2 rounded-full bg-orange-500"></span> Renewal/Auto-Renewal
+            </div>
+            <div class="p-3 bg-white border border-slate-200/90 rounded-xl font-medium text-slate-800 shadow-2xs hover:border-accent transition-colors flex items-center gap-2">
+                <span class="w-2 h-2 rounded-full bg-rose-500"></span> Penalty
+            </div>
+            <div class="p-3 bg-white border border-slate-200/90 rounded-xl font-medium text-slate-800 shadow-2xs hover:border-accent transition-colors flex items-center gap-2">
+                <span class="w-2 h-2 rounded-full bg-teal-500"></span> Governing Law
+            </div>
+            <div class="p-3 bg-white border border-slate-200/90 rounded-xl font-medium text-slate-800 shadow-2xs hover:border-accent transition-colors flex items-center gap-2">
+                <span class="w-2 h-2 rounded-full bg-slate-500"></span> Other
+            </div>
         </div>
     </section>
 
     <!-- ====================================================================
-         SECTION 8: SCOPE NOTE
+         SECTION 7: TECHNOLOGY STACK & SECURITY
          ==================================================================== -->
-    <section class="bg-white rounded-2xl border border-slate-200 p-6 sm:p-8 shadow-sm space-y-2">
-        <h2 class="font-display font-semibold text-lg text-primary">Scope & Future Roadmap</h2>
-        <p class="text-xs sm:text-sm text-muted leading-relaxed">
-            This prototype focuses on contract and agreement analysis in English. Multi-language support, jurisdiction-specific risk patterns, and integration with e-signature workflows are natural next steps.
-        </p>
+    <section class="glass-card rounded-2xl border border-slate-200 p-6 sm:p-8 space-y-4 text-center">
+        <h2 class="font-display font-semibold text-lg text-primary">Technology & Security Stack</h2>
+        <div class="flex flex-wrap items-center justify-center gap-3 text-xs sm:text-sm font-semibold text-slate-700">
+            <span class="px-4 py-2 rounded-xl bg-white border border-slate-200 shadow-2xs flex items-center gap-2">
+                <span class="w-2 h-2 rounded-full bg-blue-600"></span> Python 3.10 + Flask
+            </span>
+            <span class="px-4 py-2 rounded-xl bg-white border border-slate-200 shadow-2xs flex items-center gap-2">
+                <span class="w-2 h-2 rounded-full bg-emerald-600"></span> Google Gemini 1.5 Pro
+            </span>
+            <span class="px-4 py-2 rounded-xl bg-white border border-slate-200 shadow-2xs flex items-center gap-2">
+                <span class="w-2 h-2 rounded-full bg-teal-600"></span> Tailwind CSS Modern UI
+            </span>
+            <span class="px-4 py-2 rounded-xl bg-white border border-slate-200 shadow-2xs flex items-center gap-2">
+                <span class="w-2 h-2 rounded-full bg-amber-600"></span> In-Memory Ephemeral Storage
+            </span>
+        </div>
     </section>
 
 </div>
