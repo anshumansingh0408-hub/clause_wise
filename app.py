@@ -35,6 +35,7 @@ from analyzer import (
     analyze_document,
     calculate_risk_summary,
     CLAUSE_CATEGORIES,
+    extract_document_text,
     LEGAL_DISCLAIMER,
     RISK_LEVELS,
 )
@@ -202,13 +203,22 @@ def start_timer() -> None:
     g.start = time.time()
 
 
+def _clean_expired_cache() -> None:
+    """Removes expired entries from CACHE based on CACHE_TTL."""
+    now = time.time()
+    expired = [k for k, v in CACHE.items() if now - v.get("timestamp", 0) >= CONFIG["CACHE_TTL"]]
+    for k in expired:
+        CACHE.pop(k, None)
+
+
 @app.before_request
 def periodic_cleanup() -> None:
-    """Periodically purges stale files from the upload folder."""
+    """Periodically purges stale files from the upload folder and expired cache."""
     global REQUEST_COUNTER
     REQUEST_COUNTER += 1
     if REQUEST_COUNTER % CLEANUP_INTERVAL_REQUESTS == 0:
         cleanup_old_uploads(CONFIG["UPLOAD_FOLDER"], max_age_seconds=CONFIG["CACHE_TTL"])
+        _clean_expired_cache()
 
 
 @app.after_request
@@ -570,8 +580,84 @@ def _validate_compare_files(f_a: Any, f_b: Any) -> Optional[Tuple[Response, int]
     return None
 
 
+def _extract_text_for_caching(filepath: str) -> str:
+    """Extracts document text from a file path for cache key generation.
+
+    Args:
+        filepath: Saved file path on disk.
+
+    Returns:
+        str: Extracted plain text or decoded binary content.
+    """
+    try:
+        return extract_document_text(filepath)
+    except Exception:
+        try:
+            with open(filepath, "rb") as f:
+                return f.read().decode("utf-8", errors="replace")
+        except Exception:
+            return ""
+
+
+def _get_cached_analysis(cache_key: str, job_id: str) -> Optional[Tuple[Response, int]]:
+    """Retrieves unexpired cached analysis for document hash if available.
+
+    Args:
+        cache_key: MD5 content hash of extracted document text.
+        job_id: Unique job identifier for the current upload.
+
+    Returns:
+        Optional[Tuple[Response, int]]: Cached JSON response tuple or None on miss.
+    """
+    now = time.time()
+    if cache_key and cache_key in CACHE and now - CACHE[cache_key].get("timestamp", 0) < CONFIG["CACHE_TTL"]:
+        cached = CACHE[cache_key]
+        analysis, summary = cached["result"], cached["risk_summary"]
+        JOBS[job_id] = {
+            "status": "completed", "result": analysis, "risk_summary": summary,
+            "error": None, "type": "analyze", "cached": True,
+        }
+        return jsonify({
+            "job_id": job_id, "result": analysis, "risk_summary": summary,
+            "disclaimer": LEGAL_DISCLAIMER, "cached": True,
+        }), HTTP_OK
+    return None
+
+
+def _store_analysis_cache(cache_key: str, analysis: Dict[str, Any], summary: Dict[str, Any]) -> None:
+    """Saves completed analysis and summary to cache with current timestamp.
+
+    Args:
+        cache_key: MD5 content hash of extracted document text.
+        analysis: Full analyzed document dictionary.
+        summary: Computed risk breakdown summary.
+    """
+    if cache_key:
+        CACHE[cache_key] = {"result": analysis, "risk_summary": summary, "timestamp": time.time()}
+
+
+def _store_and_respond_analysis(
+    job_id: str, analysis: Dict[str, Any], summary: Dict[str, Any], cache_key: str
+) -> Tuple[Response, int]:
+    """Badges, caches, and formats final analysis response.
+
+    Args:
+        job_id: Unique identifier for the job.
+        analysis: Full analysis dictionary.
+        summary: Risk breakdown summary.
+        cache_key: MD5 content hash for caching.
+
+    Returns:
+        Tuple[Response, int]: JSON response and HTTP 200.
+    """
+    _enrich_badges(analysis)
+    _store_analysis_cache(cache_key, analysis, summary)
+    JOBS[job_id] = {"status": "completed", "result": analysis, "risk_summary": summary, "error": None, "type": "analyze", "cached": False}
+    return jsonify({"job_id": job_id, "result": analysis, "risk_summary": summary, "disclaimer": LEGAL_DISCLAIMER, "cached": False}), HTTP_OK
+
+
 def _process_analysis_upload(filepath: str, raw_filename: str, job_id: str) -> Tuple[Response, int]:
-    """Runs document analysis, badges results, and stores in JOBS store.
+    """Runs document analysis, checks cache, badges results, and stores in JOBS.
 
     Args:
         filepath: Saved file path on disk.
@@ -581,15 +667,17 @@ def _process_analysis_upload(filepath: str, raw_filename: str, job_id: str) -> T
     Returns:
         Tuple[Response, int]: JSON response and HTTP status code.
     """
+    doc_text = _extract_text_for_caching(filepath)
+    cache_key = generate_cache_key(doc_text) if doc_text else ""
+    cached_resp = _get_cached_analysis(cache_key, job_id)
+    if cached_resp:
+        return cached_resp
     analysis = analyze_document(filepath, raw_filename, GEMINI_API_KEY)
     if not analysis or analysis.get("status") == "error":
         msg = analysis.get("error", "Analysis failed.") if analysis else "Empty analysis returned."
         JOBS[job_id] = {"status": "error", "result": None, "error": msg, "type": "analyze"}
         return jsonify({"error": msg, "code": "ANALYSIS_FAILURE"}), HTTP_SERVER_ERROR
-    summary = calculate_risk_summary(analysis)
-    _enrich_badges(analysis)
-    JOBS[job_id] = {"status": "completed", "result": analysis, "risk_summary": summary, "error": None, "type": "analyze"}
-    return jsonify({"job_id": job_id, "result": analysis, "risk_summary": summary, "disclaimer": LEGAL_DISCLAIMER}), HTTP_OK
+    return _store_and_respond_analysis(job_id, analysis, calculate_risk_summary(analysis), cache_key)
 
 
 @app.route("/api/analyze", methods=["POST"])
@@ -726,10 +814,10 @@ def api_ask() -> Tuple[Response, int]:
     sanitized_q = sanitize_text_input(raw_q, MAX_QUESTION_LEN)
     cache_key, now = generate_cache_key(job_id, sanitized_q), time.time()
     if cache_key in CACHE and now - CACHE[cache_key].get("timestamp", 0) < CONFIG["CACHE_TTL"]:
-        return jsonify({"answer": CACHE[cache_key]["result"]}), HTTP_OK
+        return jsonify({"answer": CACHE[cache_key]["result"], "cached": True}), HTTP_OK
     ans = _answer_qa_prompt(sanitized_q, _build_qa_context(JOBS[job_id]["result"]), JOBS[job_id]["result"])
     CACHE[cache_key] = {"result": ans, "timestamp": now}
-    return jsonify({"answer": ans}), HTTP_OK
+    return jsonify({"answer": ans, "cached": False}), HTTP_OK
 
 
 @app.route("/api/status/<job_id>", methods=["GET"])

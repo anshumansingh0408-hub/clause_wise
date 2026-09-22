@@ -3,7 +3,7 @@
 import unittest
 from unittest.mock import patch
 import io
-from app import app, RATE_LIMIT_TRACKER
+from app import app, RATE_LIMIT_TRACKER, CACHE, JOBS, CONFIG
 
 
 class TestApp(unittest.TestCase):
@@ -15,6 +15,8 @@ class TestApp(unittest.TestCase):
         app.config["WTF_CSRF_ENABLED"] = False
         self.client = app.test_client()
         RATE_LIMIT_TRACKER.clear()
+        CACHE.clear()
+        JOBS.clear()
 
     def test_index_route(self):
         """GET / returns 200."""
@@ -140,10 +142,13 @@ class TestApp(unittest.TestCase):
 
     # Additional server-rendered template & helper route tests
     def test_analyze_get_default_sample(self):
-        """Test GET /analyze defaults to sample analysis."""
+        """Test GET /analyze defaults to sample analysis and includes PDF print button and styles."""
         response = self.client.get("/analyze")
         self.assertEqual(response.status_code, 200)
         self.assertIn(b"clauses analyzed", response.data)
+        self.assertIn(b"Download Summary as PDF", response.data)
+        self.assertIn(b"window.print()", response.data)
+        self.assertIn(b"@media print", response.data)
 
     def test_analyze_get_specific_sample(self):
         """Test GET /analyze with query param loads target sample."""
@@ -231,6 +236,84 @@ class TestApp(unittest.TestCase):
         self.assertEqual(response.status_code, 200)
         data = response.get_json()
         self.assertEqual(data["status"], "healthy")
+
+
+    @patch("app.analyze_document")
+    def test_api_analyze_caching_and_ttl(self, mock_analyze):
+        """POST /api/analyze caches identical document and honors CACHE_TTL."""
+        mock_analyze.return_value = {
+            "status": "success",
+            "metadata": {
+                "total_clauses": 1, "total_words": 10, "analysis_time_sec": 0.05,
+                "overall_score": 10, "overall_level": "low", "overall_label": "Low Risk",
+                "risk_counts": {"high": 0, "medium": 0, "low": 1}
+            },
+            "clauses": [
+                {
+                    "id": "c1", "number": "§1", "title": "Term", "category": "Termination",
+                    "text": "Term is one year.", "word_count": 4,
+                    "risk": {"level": "low", "color": "green", "label": "Standard"},
+                    "plain_english": "One year term."
+                }
+            ],
+            "checklist": []
+        }
+
+        data1 = {"file": (io.BytesIO(b"Term is one year."), "contract.txt")}
+        res1 = self.client.post("/api/analyze", data=data1, content_type="multipart/form-data")
+        self.assertEqual(res1.status_code, 200)
+        self.assertFalse(res1.get_json().get("cached"))
+        self.assertEqual(mock_analyze.call_count, 1)
+
+        # Upload exact same document text -> served from cache
+        data2 = {"file": (io.BytesIO(b"Term is one year."), "contract_copy.txt")}
+        res2 = self.client.post("/api/analyze", data=data2, content_type="multipart/form-data")
+        self.assertEqual(res2.status_code, 200)
+        self.assertTrue(res2.get_json().get("cached"))
+        self.assertEqual(mock_analyze.call_count, 1)
+
+        # Simulate TTL expiry
+        for k in CACHE:
+            CACHE[k]["timestamp"] -= (CONFIG["CACHE_TTL"] + 10)
+
+        # Upload after TTL expired -> re-analyzed
+        data3 = {"file": (io.BytesIO(b"Term is one year."), "contract_copy.txt")}
+        res3 = self.client.post("/api/analyze", data=data3, content_type="multipart/form-data")
+        self.assertEqual(res3.status_code, 200)
+        self.assertFalse(res3.get_json().get("cached"))
+        self.assertEqual(mock_analyze.call_count, 2)
+
+    @patch("app._answer_qa_prompt")
+    def test_api_ask_caching_and_ttl(self, mock_qa):
+        """POST /api/ask caches identical query on same job and honors CACHE_TTL."""
+        job_id = "test-cached-job-123"
+        JOBS[job_id] = {
+            "status": "completed",
+            "result": {"clauses": []}
+        }
+        mock_qa.return_value = "Answer about termination terms."
+
+        payload = {"job_id": job_id, "question": "What is the contract term?"}
+        res1 = self.client.post("/api/ask", json=payload)
+        self.assertEqual(res1.status_code, 200)
+        self.assertFalse(res1.get_json().get("cached"))
+        self.assertEqual(mock_qa.call_count, 1)
+
+        # Re-send same question -> served from cache
+        res2 = self.client.post("/api/ask", json=payload)
+        self.assertEqual(res2.status_code, 200)
+        self.assertTrue(res2.get_json().get("cached"))
+        self.assertEqual(mock_qa.call_count, 1)
+
+        # Simulate TTL expiry
+        for k in CACHE:
+            CACHE[k]["timestamp"] -= (CONFIG["CACHE_TTL"] + 10)
+
+        # Re-send after TTL expired -> recomputed
+        res3 = self.client.post("/api/ask", json=payload)
+        self.assertEqual(res3.status_code, 200)
+        self.assertFalse(res3.get_json().get("cached"))
+        self.assertEqual(mock_qa.call_count, 2)
 
 
 if __name__ == "__main__":

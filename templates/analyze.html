@@ -2,49 +2,259 @@
 
 {% block title %}Analysis: {{ source_name }} - ClauseWise AI{% endblock %}
 
-{% block content %}
-<div class="space-y-10 pb-20 max-w-5xl mx-auto animate-fade-up">
+{% block extra_head %}
+<style>
+    @media print {
+        @page {
+            size: auto;
+            margin: 12mm 15mm;
+        }
 
-    <!-- Top Navigation Bar -->
-    <div class="flex items-center justify-between">
-        <a href="{{ url_for('index') }}" class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-white border border-slate-200 text-xs sm:text-sm font-semibold text-secondary hover:text-primary hover:border-slate-300 shadow-2xs transition-all">
-            <svg class="w-4 h-4" width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+        *,
+        *::before,
+        *::after {
+            box-shadow: none !important;
+            text-shadow: none !important;
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+        }
+
+        body {
+            background: #ffffff !important;
+            background-image: none !important;
+            color: #0f172a !important;
+            font-size: 10.5pt !important;
+            line-height: 1.5 !important;
+        }
+
+        main#main-content {
+            max-width: 100% !important;
+            width: 100% !important;
+            padding: 0 !important;
+            margin: 0 !important;
+        }
+
+        .animate-fade-up {
+            animation: none !important;
+        }
+
+        /* Hide navigation, buttons, and interactive controls */
+        header,
+        footer,
+        #disclaimer-banner,
+        .skip-link,
+        .no-print,
+        nav,
+        .clause-toggle-icon,
+        [id^="clause-icon-"],
+        button#download-pdf-btn {
+            display: none !important;
+        }
+
+        /* Show clean print document header */
+        .print-header {
+            display: flex !important;
+        }
+
+        .print-container {
+            padding-bottom: 0 !important;
+            max-width: 100% !important;
+            width: 100% !important;
+        }
+
+        .space-y-10> :not([hidden])~ :not([hidden]) {
+            margin-top: 1.25rem !important;
+        }
+
+        /* 1. Summary: Document Overview Card */
+        .print-summary-card {
+            background: #ffffff !important;
+            border: 1px solid #cbd5e1 !important;
+            border-radius: 0.75rem !important;
+            padding: 1.25rem !important;
+            break-inside: avoid;
+            page-break-inside: avoid;
+        }
+
+        /* 2. Summary: Risk Stat Row */
+        .print-stats-grid {
+            display: grid !important;
+            grid-template-columns: repeat(4, 1fr) !important;
+            gap: 0.75rem !important;
+            break-inside: avoid;
+            page-break-inside: avoid;
+        }
+
+        .print-stat-box {
+            background: #ffffff !important;
+            border: 1px solid #cbd5e1 !important;
+            border-radius: 0.5rem !important;
+            padding: 0.75rem !important;
+        }
+
+        /* 3. Clauses Section */
+        .print-clauses-section {
+            margin-top: 1.5rem !important;
+        }
+
+        .print-clause-card {
+            border: 1px solid #cbd5e1 !important;
+            border-radius: 0.75rem !important;
+            background: #ffffff !important;
+            margin-bottom: 0.75rem !important;
+            break-inside: avoid;
+            page-break-inside: avoid;
+        }
+
+        button.print-clause-header {
+            display: block !important;
+            width: 100% !important;
+            text-align: left !important;
+            padding: 0.85rem 1rem !important;
+            cursor: default !important;
+            background: transparent !important;
+        }
+
+        .clause-body,
+        [id^="clause-body-"],
+        .print-clause-body {
+            display: block !important;
+            padding: 0 1rem 1rem 1rem !important;
+            background: #ffffff !important;
+            border-top: 1px solid #f1f5f9 !important;
+        }
+
+        .line-clamp-2 {
+            display: block !important;
+            -webkit-line-clamp: unset !important;
+            overflow: visible !important;
+        }
+
+        .excerpt {
+            background: #f8fafc !important;
+            border-left: 3px solid #0ea5a5 !important;
+            font-size: 9.5pt !important;
+            padding: 0.5rem 0.75rem !important;
+        }
+
+        /* 4. Action Checklist & Questions */
+        .print-grid-checklist-questions {
+            display: grid !important;
+            grid-template-columns: 1fr 1fr !important;
+            gap: 1rem !important;
+            margin-top: 1.5rem !important;
+        }
+
+        .print-checklist-card,
+        .print-questions-card {
+            background: #ffffff !important;
+            border: 1px solid #cbd5e1 !important;
+            border-radius: 0.75rem !important;
+            padding: 1.25rem !important;
+            break-inside: avoid;
+            page-break-inside: avoid;
+        }
+
+        .print-checklist-card li,
+        .print-questions-card li {
+            border: 1px solid #e2e8f0 !important;
+            background: #ffffff !important;
+            opacity: 1 !important;
+            break-inside: avoid;
+            page-break-inside: avoid;
+        }
+
+        input[type="checkbox"] {
+            appearance: auto !important;
+            -webkit-appearance: checkbox !important;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="space-y-10 pb-20 max-w-5xl mx-auto animate-fade-up print-container">
+
+    <!-- Print-Only Header: Clean branding and document meta on printed output -->
+    <div class="hidden print-header border-b-2 border-slate-800 pb-3 mb-6 justify-between items-end">
+        <div>
+            <div class="flex items-center gap-1.5">
+                <span class="font-display text-xl font-bold text-slate-900">Clause<span class="text-accent">Wise</span>
+                    AI</span>
+                <span
+                    class="text-xs text-slate-500 font-semibold uppercase tracking-wider ml-2 px-2 py-0.5 rounded bg-slate-100 border border-slate-200">Legal
+                    Audit Summary</span>
+            </div>
+            <p class="text-xs text-slate-600 mt-1">Automated contract risk analysis, key clauses, questions, and action
+                checklist</p>
+        </div>
+        <div class="text-right text-xs text-slate-500">
+            <p class="font-mono text-slate-700 font-semibold">{{ source_name }}</p>
+            <p class="text-[11px] text-slate-400">ClauseWise Ephemeral Audit</p>
+        </div>
+    </div>
+
+    <!-- Top Navigation Bar (Hidden on Print) -->
+    <div class="flex flex-wrap items-center justify-between gap-3 no-print">
+        <a href="{{ url_for('index') }}"
+            class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-zinc-900/90 border border-zinc-800 text-xs sm:text-sm font-semibold text-zinc-300 hover:text-white hover:border-zinc-700 transition-all">
+            <svg class="w-4 h-4" width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                stroke-width="2">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
             </svg>
             <span>Back to Upload</span>
         </a>
-        <div class="flex items-center gap-2 text-xs text-muted">
-            <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
-            <span>Automated Legal Audit Report</span>
+        <div class="flex items-center gap-3">
+            <div class="hidden sm:flex items-center gap-2 text-xs text-zinc-400">
+                <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                <span>Automated Legal Audit Report</span>
+            </div>
+            <button type="button" id="download-pdf-btn" onclick="window.print()"
+                class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-white hover:bg-zinc-100 text-zinc-950 text-xs sm:text-sm font-semibold shadow-lg shadow-white/5 transition-all cursor-pointer">
+                <svg class="w-4 h-4 text-teal-600" width="16" height="16" fill="none" stroke="currentColor"
+                    viewBox="0 0 24 24" stroke-width="2" aria-hidden="true">
+                    <path stroke-linecap="round" stroke-linejoin="round"
+                        d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+                <span>Download Summary as PDF</span>
+            </button>
         </div>
     </div>
 
     <!-- 1. Document Overview Card -->
-    <div class="glass-card rounded-2xl border border-slate-200 p-6 sm:p-8 shadow-subtle space-y-5">
-        <div class="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 pb-4">
+    <div
+        class="glass-card rounded-2xl border border-zinc-800/80 bg-zinc-900/60 backdrop-blur-xl p-6 sm:p-8 shadow-2xl space-y-5 print-summary-card">
+        <div class="flex flex-wrap items-center justify-between gap-3 border-b border-zinc-800/80 pb-4">
             <div class="flex items-center gap-2.5">
-                <span class="px-3.5 py-1 rounded-full text-xs font-bold bg-primary text-white shadow-2xs">
+                <span
+                    class="px-3.5 py-1 rounded-full text-xs font-bold bg-teal-500/15 text-teal-400 border border-teal-500/30 shadow-2xs">
                     {{ analysis.metadata.overall_label or "Legal Document" }}
                 </span>
-                <span class="text-xs text-muted font-semibold bg-slate-100 px-2.5 py-1 rounded-full">
+                <span
+                    class="text-xs text-zinc-400 font-semibold bg-zinc-800/80 px-2.5 py-1 rounded-full border border-zinc-700/60">
                     {{ analysis.metadata.total_clauses or analysis.clauses|length }} clauses analyzed
                 </span>
             </div>
-            <div class="text-xs text-slate-500 font-mono bg-slate-50 px-3 py-1 rounded-lg border border-slate-200/70">
-                Document: <strong class="text-slate-800">{{ source_name }}</strong>
+            <div class="text-xs text-zinc-400 font-mono bg-zinc-950/60 px-3 py-1 rounded-lg border border-zinc-800/80">
+                Document: <strong class="text-zinc-200">{{ source_name }}</strong>
             </div>
         </div>
 
         <div class="space-y-2">
-            <h1 class="font-display text-2xl sm:text-3xl lg:text-4xl font-bold text-primary">{{ source_name }}</h1>
-            <p class="text-sm sm:text-base text-slate-700 leading-relaxed font-normal">
+            <h1 class="font-display text-2xl sm:text-3xl lg:text-4xl font-bold text-white tracking-tight">{{ source_name
+                }}</h1>
+            <p class="text-sm sm:text-base text-zinc-300 leading-relaxed font-normal">
                 {{ analysis.metadata.overall_label or "Comprehensive analysis completed." }}
-                ClauseWise scanned <strong>{{ analysis.metadata.total_clauses or analysis.clauses|length }} clauses</strong> across 
-                {{ analysis.metadata.total_words or "several" }} words in {{ analysis.metadata.analysis_time_sec or "0.4" }}s.
+                ClauseWise scanned <strong class="text-white">{{ analysis.metadata.total_clauses or
+                    analysis.clauses|length }} clauses</strong> across
+                {{ analysis.metadata.total_words or "several" }} words in {{ analysis.metadata.analysis_time_sec or
+                "0.4" }}s.
                 {% if analysis.metadata.risk_counts and analysis.metadata.risk_counts.high > 0 %}
-                    <span class="text-red-700 font-semibold">Identified {{ analysis.metadata.risk_counts.high }} high-risk provisions requiring attorney consultation.</span>
+                <span class="text-rose-400 font-semibold">Identified {{ analysis.metadata.risk_counts.high }} high-risk
+                    provisions requiring attorney consultation.</span>
                 {% else %}
-                    <span class="text-green-700 font-semibold">No critical high-risk flags were detected. Standard commercial terms.</span>
+                <span class="text-emerald-400 font-semibold">No critical high-risk flags were detected. Standard
+                    commercial terms.</span>
                 {% endif %}
             </p>
         </div>
@@ -52,170 +262,262 @@
 
     <!-- 2. Risk Stat Row -->
     {% set rc = analysis.metadata.risk_counts or {} %}
-    <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 text-center">
-        <div class="glass-card p-5 rounded-2xl border border-slate-200 shadow-subtle">
-            <span class="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Total Clauses</span>
-            <p class="text-3xl font-display font-bold text-primary mt-1.5">{{ analysis.metadata.total_clauses or analysis.clauses|length }}</p>
-            <span class="text-[10px] text-muted font-medium mt-1 block">Full agreement scope</span>
+    {% set high_val = rc.high or 0 %}
+    {% set med_val = rc.medium or 0 %}
+    {% set low_val = rc.low or 0 %}
+    <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 text-center print-stats-grid">
+        <div class="glass-card p-5 rounded-2xl border border-white/[0.08] bg-zinc-900/50 shadow-sm print-stat-box">
+            <span class="text-[11px] font-bold text-zinc-400 uppercase tracking-wider">Total Clauses</span>
+            <p class="text-3xl font-display font-bold text-white mt-1.5">{{ analysis.metadata.total_clauses or
+                analysis.clauses|length }}</p>
+            <span class="text-[10px] text-zinc-400 font-medium mt-1 block">Full agreement scope</span>
         </div>
-        <div class="glass-card p-5 rounded-2xl border border-red-200/80 bg-red-50/40 shadow-subtle">
-            <span class="text-[11px] font-bold text-red-700 uppercase tracking-wider">High Risk</span>
-            <p class="text-3xl font-display font-bold text-red-800 mt-1.5">{{ rc.high or 0 }}</p>
-            <span class="text-[10px] text-red-600 font-medium mt-1 block">Urgent counsel review</span>
+        <div class="glass-card p-5 rounded-2xl border {% if high_val > 0 %}border-rose-500/40 bg-rose-950/25 shadow-[0_0_25px_rgba(244,63,94,0.18)]{% else %}border-white/[0.08] bg-zinc-900/40{% endif %} print-stat-box">
+            <span class="text-[11px] font-bold {% if high_val > 0 %}text-[#f87171]{% else %}text-zinc-400{% endif %} uppercase tracking-wider">High Risk</span>
+            <p class="text-3xl font-display font-bold {% if high_val > 0 %}text-rose-200{% else %}text-zinc-300{% endif %} mt-1.5">{{ high_val }}</p>
+            <span class="text-[10px] {% if high_val > 0 %}text-[#f87171]{% else %}text-zinc-500{% endif %} font-medium mt-1 block">{% if high_val > 0 %}Urgent counsel review{% else %}Zero critical flags{% endif %}</span>
         </div>
-        <div class="glass-card p-5 rounded-2xl border border-amber-200/80 bg-amber-50/40 shadow-subtle">
-            <span class="text-[11px] font-bold text-amber-800 uppercase tracking-wider">Worth Reviewing</span>
-            <p class="text-3xl font-display font-bold text-amber-900 mt-1.5">{{ rc.medium or 0 }}</p>
-            <span class="text-[10px] text-amber-700 font-medium mt-1 block">Potential exposure</span>
+        <div class="glass-card p-5 rounded-2xl border {% if med_val > 0 %}border-amber-500/40 bg-amber-950/25 shadow-[0_0_25px_rgba(245,158,11,0.18)]{% else %}border-white/[0.08] bg-zinc-900/40{% endif %} print-stat-box">
+            <span class="text-[11px] font-bold {% if med_val > 0 %}text-[#fbbf24]{% else %}text-zinc-400{% endif %} uppercase tracking-wider">Worth Reviewing</span>
+            <p class="text-3xl font-display font-bold {% if med_val > 0 %}text-amber-200{% else %}text-zinc-300{% endif %} mt-1.5">{{ med_val }}</p>
+            <span class="text-[10px] {% if med_val > 0 %}text-[#fbbf24]{% else %}text-zinc-500{% endif %} font-medium mt-1 block">{% if med_val > 0 %}Potential exposure{% else %}No exposure points{% endif %}</span>
         </div>
-        <div class="glass-card p-5 rounded-2xl border border-green-200/80 bg-green-50/40 shadow-subtle">
-            <span class="text-[11px] font-bold text-green-700 uppercase tracking-wider">Standard Terms</span>
-            <p class="text-3xl font-display font-bold text-green-800 mt-1.5">{{ rc.low or 0 }}</p>
-            <span class="text-[10px] text-green-600 font-medium mt-1 block">Low legal risk</span>
+        <div class="glass-card p-5 rounded-2xl border {% if low_val > 0 %}border-emerald-500/40 bg-emerald-950/25 shadow-[0_0_25px_rgba(16,185,129,0.2)]{% else %}border-white/[0.08] bg-zinc-900/40{% endif %} print-stat-box">
+            <span class="text-[11px] font-bold {% if low_val > 0 %}text-[#4ade80]{% else %}text-zinc-400{% endif %} uppercase tracking-wider">Standard Terms</span>
+            <p class="text-3xl font-display font-bold {% if low_val > 0 %}text-emerald-300{% else %}text-zinc-300{% endif %} mt-1.5">{{ low_val }}</p>
+            <span class="text-[10px] {% if low_val > 0 %}text-[#4ade80]{% else %}text-zinc-500{% endif %} font-medium mt-1 block">Low risk provisions</span>
         </div>
     </div>
 
     <!-- 3. Clause List (Expandable Cards) -->
-    <div class="space-y-4">
+    <div class="space-y-4 print-clauses-section">
         <div class="flex items-center justify-between">
             <div>
-                <h2 class="font-display text-xl sm:text-2xl font-bold text-primary">Clause-by-Clause Breakdown</h2>
-                <p class="text-xs text-muted">Click any clause to inspect original text excerpt & risk reasoning</p>
+                <h2 class="font-display text-xl sm:text-2xl font-bold text-white">Clause-by-Clause Breakdown</h2>
+                <p class="text-xs text-zinc-400 no-print">Click any clause to inspect original text excerpt & risk
+                    reasoning</p>
             </div>
-            <span class="text-xs font-semibold text-slate-500 bg-slate-100 px-3 py-1 rounded-full border border-slate-200">
+            <span
+                class="text-xs font-semibold text-zinc-400 bg-zinc-800/80 px-3 py-1 rounded-full border border-zinc-700/60">
                 {{ analysis.clauses|length }} Provisions
             </span>
         </div>
-        
+
         <div class="space-y-3">
             {% for clause in analysis.clauses %}
-                {% set r_info = clause.risk or {} %}
-                {% set r_level = (r_info.level or 'low')|lower %}
-                <div class="glass-card rounded-2xl border {% if r_level == 'high' %}border-red-200 bg-red-50/10{% elif r_level == 'medium' %}border-amber-200 bg-amber-50/10{% else %}border-slate-200{% endif %} overflow-hidden shadow-subtle transition-all hover:border-slate-300">
-                    <button type="button" aria-expanded="false" aria-controls="clause-body-{{ loop.index }}"
-                            onclick="window.toggleClauseCard({{ loop.index }})"
-                            class="w-full text-left p-5 sm:p-6 flex items-start sm:items-center justify-between gap-4 focus:outline-none focus:bg-slate-50/80 transition-colors">
-                        <div class="space-y-1.5 flex-1 min-w-0">
-                            <div class="flex flex-wrap items-center gap-2">
-                                <span class="px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-blue-50 text-secondary border border-blue-200">
-                                    {{ clause.category or "General" }}
-                                </span>
-                                {% if r_level == 'high' %}
-                                    <span class="badge badge-high text-[10px]">High Risk</span>
-                                {% elif r_level == 'medium' %}
-                                    <span class="badge badge-medium text-[10px]">Worth Reviewing</span>
-                                {% else %}
-                                    <span class="badge badge-low text-[10px]">Standard</span>
-                                {% endif %}
-                                <span class="text-xs text-muted font-medium">§{{ loop.index }}</span>
-                            </div>
-                            <h3 class="font-display font-bold text-base sm:text-lg text-primary truncate">
-                                {{ clause.title or ("Clause " ~ loop.index) }}
-                            </h3>
-                            <p class="text-xs sm:text-sm text-slate-600 line-clamp-2 leading-relaxed">
-                                {{ clause.plain_english or "Summary unavailable." }}
-                            </p>
+            {% set r_info = clause.risk or {} %}
+            {% set r_level = (r_info.level or 'low')|lower %}
+            <div
+                class="glass-card rounded-2xl border {% if r_level == 'high' %}border-rose-500/30 bg-rose-950/10 hover:border-rose-500/50{% elif r_level == 'medium' %}border-amber-500/30 bg-amber-950/10 hover:border-amber-500/50{% else %}border-zinc-800/80 bg-zinc-900/60 hover:border-zinc-700{% endif %} overflow-hidden shadow-xl transition-all print-clause-card">
+                <button type="button" aria-expanded="false" aria-controls="clause-body-{{ loop.index }}"
+                    onclick="window.toggleClauseCard({{ loop.index }})"
+                    class="w-full text-left p-5 sm:p-6 flex items-start sm:items-center justify-between gap-4 focus:outline-none focus:bg-zinc-800/30 transition-colors print-clause-header">
+                    <div class="space-y-1.5 flex-1 min-w-0">
+                        <div class="flex flex-wrap items-center gap-2">
+                            <span
+                                class="px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-zinc-800/90 text-zinc-300 border border-zinc-700/60">
+                                {{ clause.category or "General" }}
+                            </span>
+                            {% if r_level == 'high' %}
+                            <span class="badge badge-high text-[10px]">High Risk</span>
+                            {% elif r_level == 'medium' %}
+                            <span class="badge badge-medium text-[10px]">Worth Reviewing</span>
+                            {% else %}
+                            <span class="badge badge-low text-[10px]">Standard</span>
+                            {% endif %}
+                            <span class="text-xs text-zinc-500 font-medium">§{{ loop.index }}</span>
                         </div>
-                        <div class="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-600 font-bold text-base flex-shrink-0" id="clause-icon-{{ loop.index }}">
-                            +
-                        </div>
-                    </button>
-
-                    <!-- Expandable Body -->
-                    <div id="clause-body-{{ loop.index }}" class="hidden p-5 sm:p-6 bg-slate-50/80 border-t border-slate-200/80 space-y-4 text-xs sm:text-sm">
-                        <!-- Quoted Serif Excerpt -->
-                        <div class="space-y-1.5">
-                            <span class="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Original Contract Excerpt</span>
-                            <div class="excerpt">
-                                "{{ clause.text }}"
-                            </div>
-                        </div>
-
-                        {% if r_info.flags and r_info.flags|length > 0 %}
-                            <div class="p-4 bg-red-50/80 border border-red-200 rounded-xl text-red-900 space-y-1.5">
-                                <strong class="font-bold text-xs text-red-950 uppercase tracking-wider flex items-center gap-1.5">
-                                    <svg class="w-4 h-4 text-red-600" width="16" height="16" fill="currentColor" viewBox="0 0 20 20">
-                                        <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
-                                    </svg>
-                                    Risk Exposure Flags:
-                                </strong>
-                                <ul class="list-disc list-inside space-y-1 text-xs text-red-800">
-                                    {% for flag in r_info.flags %}
-                                        <li>{{ flag }}</li>
-                                    {% endfor %}
-                                </ul>
-                            </div>
-                        {% endif %}
+                        <h3 class="font-display font-bold text-base sm:text-lg text-white truncate">
+                            {{ clause.title or ("Clause " ~ loop.index) }}
+                        </h3>
+                        <p class="text-xs sm:text-sm text-zinc-400 line-clamp-2 leading-relaxed">
+                            {{ clause.plain_english or "Summary unavailable." }}
+                        </p>
                     </div>
+                    <div class="w-8 h-8 rounded-full bg-zinc-800 border border-zinc-700/80 flex items-center justify-center text-zinc-300 font-bold text-base flex-shrink-0 clause-toggle-icon"
+                        id="clause-icon-{{ loop.index }}">
+                        +
+                    </div>
+                </button>
+
+                <!-- Expandable Body -->
+                <div id="clause-body-{{ loop.index }}"
+                    class="clause-body hidden p-5 sm:p-6 bg-zinc-950/70 border-t border-zinc-800/80 space-y-4 text-xs sm:text-sm print-clause-body">
+                    <!-- Quoted Serif Excerpt -->
+                    <div class="space-y-1.5">
+                        <span class="text-[11px] font-bold text-zinc-400 uppercase tracking-wider">Original Contract
+                            Excerpt</span>
+                        <div
+                            class="excerpt bg-zinc-900/80 border-l-2 border-teal-500 text-zinc-300 p-3 rounded-r-lg font-serif">
+                            "{{ clause.text }}"
+                        </div>
+                    </div>
+
+                    {% if r_info.flags and r_info.flags|length > 0 %}
+                    <div class="p-4 bg-rose-950/30 border border-rose-800/50 rounded-xl text-rose-200 space-y-1.5">
+                        <strong
+                            class="font-bold text-xs text-rose-300 uppercase tracking-wider flex items-center gap-1.5">
+                            <svg class="w-4 h-4 text-rose-400" width="16" height="16" fill="currentColor"
+                                viewBox="0 0 20 20">
+                                <path fill-rule="evenodd"
+                                    d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z"
+                                    clip-rule="evenodd" />
+                            </svg>
+                            Risk Exposure Flags:
+                        </strong>
+                        <ul class="list-disc list-inside space-y-1 text-xs text-rose-300/90">
+                            {% for flag in r_info.flags %}
+                            <li>{{ flag }}</li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                    {% endif %}
                 </div>
+            </div>
             {% endfor %}
         </div>
     </div>
 
     <!-- 4. Action Checklist & Questions to Ask a Lawyer -->
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 print-grid-checklist-questions">
         <!-- Action Checklist -->
-        <div class="glass-card rounded-2xl border border-slate-200 p-6 shadow-subtle space-y-4">
-            <div class="flex items-center gap-2.5 border-b border-slate-100 pb-3">
-                <div class="w-8 h-8 rounded-lg bg-teal-50 text-teal-700 flex items-center justify-center font-bold text-sm">
+        <div
+            class="glass-card rounded-2xl border border-zinc-800/80 bg-zinc-900/60 backdrop-blur-xl p-6 shadow-xl space-y-4 print-checklist-card">
+            <div class="flex items-center gap-2.5 border-b border-zinc-800/80 pb-3">
+                <div
+                    class="w-8 h-8 rounded-lg bg-teal-500/10 text-teal-400 border border-teal-500/20 flex items-center justify-center font-bold text-sm">
                     ✓
                 </div>
                 <div>
-                    <h3 class="font-display font-bold text-lg text-primary">Negotiation Action Checklist</h3>
-                    <p class="text-[11px] text-muted">Mark off items as you review them</p>
+                    <h3 class="font-display font-bold text-lg text-white">Negotiation Action Checklist</h3>
+                    <p class="text-[11px] text-zinc-400">Mark off items as you review them</p>
                 </div>
             </div>
             <ul class="space-y-2.5">
                 {% if analysis.checklist and analysis.checklist|length > 0 %}
-                    {% for item in analysis.checklist %}
-                        <li class="flex items-start gap-3 p-3.5 rounded-xl border border-slate-200/90 bg-white hover:bg-slate-50 transition-colors cursor-pointer shadow-2xs"
-                            onclick="this.classList.toggle('opacity-50'); this.querySelector('span.checklist-text').classList.toggle('line-through');">
-                            <input type="checkbox" id="check-{{ loop.index }}" aria-label="Toggle item {{ loop.index }}" class="mt-1 h-4 w-4 rounded text-accent focus:ring-accent cursor-pointer">
-                            <div class="flex-1">
-                                <span class="checklist-text text-xs sm:text-sm font-semibold text-slate-800">
-                                    <span class="text-secondary">[{{ item.priority or 'Review' }}]</span> {{ item.action_item or item.concern }}
-                                </span>
-                                {% if item.concern %}
-                                    <p class="text-[11px] text-muted mt-0.5">Concern: {{ item.concern }}</p>
-                                {% endif %}
-                            </div>
-                        </li>
-                    {% endfor %}
+                {% for item in analysis.checklist %}
+                <li class="flex items-start gap-3 p-3.5 rounded-xl border border-zinc-800/80 bg-zinc-900/80 hover:bg-zinc-800/50 transition-colors cursor-pointer shadow-sm"
+                    onclick="this.classList.toggle('opacity-50'); this.querySelector('span.checklist-text').classList.toggle('line-through');">
+                    <input type="checkbox" id="check-{{ loop.index }}" aria-label="Toggle item {{ loop.index }}"
+                        class="mt-1 h-4 w-4 rounded accent-teal-500 cursor-pointer">
+                    <div class="flex-1">
+                        <span class="checklist-text text-xs sm:text-sm font-semibold text-zinc-200">
+                            <span class="text-teal-400">[{{ item.priority or 'Review' }}]</span> {{ item.action_item or
+                            item.concern }}
+                        </span>
+                        {% if item.concern %}
+                        <p class="text-[11px] text-zinc-400 mt-0.5">Concern: {{ item.concern }}</p>
+                        {% endif %}
+                    </div>
+                </li>
+                {% endfor %}
                 {% else %}
-                    <li class="text-xs text-muted">No urgent negotiation actions required.</li>
+                <li class="text-xs text-zinc-500">No urgent negotiation actions required.</li>
                 {% endif %}
             </ul>
         </div>
 
         <!-- Questions for Lawyer -->
-        <div class="glass-card rounded-2xl border border-slate-200 p-6 shadow-subtle space-y-4">
-            <div class="flex items-center gap-2.5 border-b border-slate-100 pb-3">
-                <div class="w-8 h-8 rounded-lg bg-blue-50 text-secondary flex items-center justify-center font-bold text-sm">
+        <div
+            class="glass-card rounded-2xl border border-zinc-800/80 bg-zinc-900/60 backdrop-blur-xl p-6 shadow-xl space-y-4 print-questions-card">
+            <div class="flex items-center gap-2.5 border-b border-zinc-800/80 pb-3">
+                <div
+                    class="w-8 h-8 rounded-lg bg-blue-500/10 text-blue-400 border border-blue-500/20 flex items-center justify-center font-bold text-sm">
                     ?
                 </div>
                 <div>
-                    <h3 class="font-display font-bold text-lg text-primary">Questions for Your Lawyer</h3>
-                    <p class="text-[11px] text-muted">Formulated conversation points for consultation</p>
+                    <h3 class="font-display font-bold text-lg text-white">Questions for Your Lawyer</h3>
+                    <p class="text-[11px] text-zinc-400">Formulated conversation points for consultation</p>
                 </div>
             </div>
-            <ol class="space-y-2.5 list-decimal list-inside text-xs sm:text-sm text-slate-800">
-                <li class="p-3 rounded-xl bg-white border border-slate-200 shadow-2xs leading-relaxed">
+            <ol class="space-y-2.5 list-decimal list-inside text-xs sm:text-sm text-zinc-300">
+                <li class="p-3 rounded-xl bg-zinc-900/80 border border-zinc-800/80 shadow-sm leading-relaxed">
                     <span>What are standard limitation of liability caps for this contract category in our state?</span>
                 </li>
-                <li class="p-3 rounded-xl bg-white border border-slate-200 shadow-2xs leading-relaxed">
-                    <span>Can we modify unilateral indemnity to require mutual indemnification with an aggregate monetary limit?</span>
+                <li class="p-3 rounded-xl bg-zinc-900/80 border border-zinc-800/80 shadow-sm leading-relaxed">
+                    <span>Can we modify unilateral indemnity to require mutual indemnification with an aggregate
+                        monetary limit?</span>
                 </li>
-                <li class="p-3 rounded-xl bg-white border border-slate-200 shadow-2xs leading-relaxed">
-                    <span>Does the renewal notification window allow reasonable operational time to decide on termination?</span>
+                <li class="p-3 rounded-xl bg-zinc-900/80 border border-zinc-800/80 shadow-sm leading-relaxed">
+                    <span>Does the renewal notification window allow reasonable operational time to decide on
+                        termination?</span>
                 </li>
             </ol>
         </div>
     </div>
 
-    <!-- 5. Legal Disclaimer Notice -->
-    <div class="p-5 rounded-2xl bg-amber-50 border border-amber-200/80 text-amber-900 text-xs text-center space-y-1 shadow-2xs">
-        <p class="font-bold text-amber-950">Important Legal Notice</p>
-        <p class="text-amber-800">ClauseWise provides automated informational assistance and does not provide formal legal advice. Always consult a licensed attorney in your jurisdiction.</p>
+    <!-- 5. Your Options (Informational Next-Step Paths - Hidden on Print) -->
+    <div
+        class="glass-card rounded-2xl border border-zinc-800/80 bg-zinc-900/60 backdrop-blur-xl p-6 sm:p-8 space-y-5 shadow-xl no-print">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-zinc-800/80 pb-3">
+            <div class="flex items-center gap-2.5">
+                <div
+                    class="w-8 h-8 rounded-lg bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 flex items-center justify-center font-bold text-sm">
+                    🧭
+                </div>
+                <div>
+                    <h3 class="font-display font-bold text-xl text-white">Your Options</h3>
+                    <p class="text-xs text-zinc-400">Generic next-step paths to consider — informational only, not legal
+                        advice</p>
+                </div>
+            </div>
+            <span
+                class="inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-semibold bg-indigo-500/15 text-indigo-400 border border-indigo-500/30 self-start sm:self-auto">
+                Informational Paths
+            </span>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {% set default_steps = [
+            "Negotiate the clause: Request specific revisions, carveouts, or monetary liability caps with the
+            counterparty.",
+            "Accept as-is: Proceed if commercial value and relationship outweigh the identified risks.",
+            "Seek clarification before signing: Request written explanation or confirmation for ambiguous provisions.",
+            "Walk away from this term: Evaluate whether high-risk or uncapped obligations are non-negotiable
+            dealbreakers."
+            ] %}
+            {% set steps = analysis.possible_next_steps if (analysis.possible_next_steps and
+            analysis.possible_next_steps|length > 0) else default_steps %}
+            {% for step in steps %}
+            <div
+                class="p-4 sm:p-5 rounded-xl border border-zinc-800/80 bg-zinc-900/80 transition-all shadow-sm space-y-2">
+                <div class="flex items-center gap-2.5">
+                    <span class="text-lg" aria-hidden="true">
+                        {% if loop.index == 1 %}🤝{% elif loop.index == 2 %}✅{% elif loop.index == 3 %}❓{% else %}🚪{%
+                        endif %}
+                    </span>
+                    {% if ':' in step %}
+                    <h4 class="font-display font-bold text-sm sm:text-base text-white">{{ step.split(':', 1)[0].strip()
+                        }}</h4>
+                    {% else %}
+                    <h4 class="font-display font-bold text-sm sm:text-base text-white">Option {{ loop.index }}</h4>
+                    {% endif %}
+                </div>
+                <p class="text-xs sm:text-sm text-zinc-400 leading-relaxed font-normal">
+                    {% if ':' in step %}
+                    {{ step.split(':', 1)[1].strip() }}
+                    {% else %}
+                    {{ step }}
+                    {% endif %}
+                </p>
+            </div>
+            {% endfor %}
+        </div>
+
+        <div
+            class="p-3.5 rounded-xl bg-zinc-950/60 border border-zinc-800/80 text-zinc-400 text-xs flex items-center gap-2.5">
+            <span class="text-base" aria-hidden="true">💡</span>
+            <span>These paths represent commercial possibilities to discuss with counsel or business partners, not
+                binding legal recommendations.</span>
+        </div>
+    </div>
+
+    <!-- 6. Legal Disclaimer Notice (Hidden on Print) -->
+    <div
+        class="p-5 rounded-2xl bg-amber-950/20 border border-amber-800/40 text-amber-200/90 text-xs text-center space-y-1 shadow-sm no-print">
+        <p class="font-bold text-amber-300">Important Legal Notice</p>
+        <p class="text-amber-200/80">ClauseWise provides automated informational assistance and does not provide formal
+            legal advice. Always consult a licensed attorney in your jurisdiction.</p>
     </div>
 
 </div>

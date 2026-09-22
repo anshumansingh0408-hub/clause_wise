@@ -53,13 +53,14 @@ class TestAnalyzer(unittest.TestCase):
         self.assertEqual(len(extracted), MAX_DOCUMENT_CHARS)
 
     def test_build_analysis_prompt_contains_schema(self):
-        """Verify generated prompt contains key schema field names (e.g. 'risk_level', 'lawyer_questions')."""
+        """Verify generated prompt contains key schema field names (e.g. 'risk_level', 'lawyer_questions', 'possible_next_steps')."""
         prompt = build_analysis_prompt("Sample agreement text", "contract.pdf")
         self.assertIn("risk_level", prompt)
         self.assertIn("lawyer_questions", prompt)
         self.assertIn("document_type", prompt)
         self.assertIn("overall_summary", prompt)
         self.assertIn("action_checklist", prompt)
+        self.assertIn("possible_next_steps", prompt)
 
     def test_build_analysis_prompt_includes_disclaimer_instruction(self):
         """Verify prompt explicitly instructs against giving legal advice."""
@@ -216,6 +217,8 @@ class TestAnalyzer(unittest.TestCase):
         self.assertGreaterEqual(result["metadata"]["risk_counts"]["high"], 2)
         self.assertEqual(result["metadata"]["overall_level"], "high")
         self.assertGreaterEqual(len(result["checklist"]), 2)
+        self.assertIn("possible_next_steps", result)
+        self.assertGreaterEqual(len(result["possible_next_steps"]), 2)
 
 
 if __name__ == "__main__":

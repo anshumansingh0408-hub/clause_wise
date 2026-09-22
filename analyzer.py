@@ -51,6 +51,13 @@ LEGAL_DISCLAIMER = (
     "does not replace a licensed attorney."
 )
 
+DEFAULT_POSSIBLE_NEXT_STEPS: List[str] = [
+    "Negotiate the clause: Request specific revisions, carveouts, or monetary caps with the counterparty.",
+    "Accept as-is: Proceed if commercial value and relationship outweigh the identified risks.",
+    "Seek clarification before signing: Request written explanation or confirmation for ambiguous provisions.",
+    "Walk away from this term: Evaluate whether high-risk or uncapped obligations are non-negotiable dealbreakers.",
+]
+
 CONFIG = {
     "timeout": 30,
     "temperature": 0.2,
@@ -692,8 +699,49 @@ def _compute_overall_risk(
     return score, "low", "Low Risk - Standard Commercial Terms"
 
 
+def _extract_next_steps(gemini_res: Any) -> List[str]:
+    """Extracts 2-4 generic informational next steps from Gemini response.
+
+    Args:
+        gemini_res: Parsed Gemini response object.
+
+    Returns:
+        List[str]: List of 2-4 next-step paths or default paths.
+    """
+    if isinstance(gemini_res, dict):
+        raw = gemini_res.get("possible_next_steps")
+        if isinstance(raw, list) and raw:
+            cleaned = [str(s).strip() for s in raw if str(s).strip()]
+            if 2 <= len(cleaned) <= 6:
+                return cleaned[:4]
+    return list(DEFAULT_POSSIBLE_NEXT_STEPS)
+
+
+def _format_analysis_metadata(
+    analyzed: List[Dict[str, Any]], risk_counts: Dict[str, int], duration: float, cat_counts: Dict[str, int]
+) -> Dict[str, Any]:
+    """Builds metadata dictionary for analysis result.
+
+    Args:
+        analyzed: List of analyzed clauses.
+        risk_counts: Count of risks by level.
+        duration: Processing time in seconds.
+        cat_counts: Category counts.
+
+    Returns:
+        Dict[str, Any]: Metadata dictionary.
+    """
+    score, level, label = _compute_overall_risk(len(analyzed), risk_counts)
+    words = sum(c["word_count"] for c in analyzed)
+    return {
+        "total_clauses": len(analyzed), "total_words": words, "analysis_time_sec": duration,
+        "overall_score": score, "overall_level": level, "overall_label": label,
+        "category_counts": cat_counts, "risk_counts": risk_counts,
+    }
+
+
 def _format_analysis_result(
-    analyzed: List[Dict[str, Any]], cat_counts: Dict[str, int], risk_counts: Dict[str, int], start: float
+    analyzed: List[Dict[str, Any]], cat_counts: Dict[str, int], risk_counts: Dict[str, int], start: float, next_steps: Optional[List[str]] = None
 ) -> Dict[str, Any]:
     """Packages final analysis metadata and payload.
 
@@ -702,19 +750,18 @@ def _format_analysis_result(
         cat_counts: Category frequencies.
         risk_counts: Risk severity counts.
         start: Start timestamp.
+        next_steps: Optional list of informational next-step paths.
 
     Returns:
         Dict[str, Any]: Success payload.
     """
-    score, level, label = _compute_overall_risk(len(analyzed), risk_counts)
     duration = round(time.time() - start, DEFAULT_DURATION_DECIMALS)
-    words = sum(c["word_count"] for c in analyzed)
-    meta = {
-        "total_clauses": len(analyzed), "total_words": words, "analysis_time_sec": duration,
-        "overall_score": score, "overall_level": level, "overall_label": label,
-        "category_counts": cat_counts, "risk_counts": risk_counts,
+    meta = _format_analysis_metadata(analyzed, risk_counts, duration, cat_counts)
+    steps = next_steps if next_steps else list(DEFAULT_POSSIBLE_NEXT_STEPS)
+    return {
+        "status": "success", "metadata": meta, "clauses": analyzed,
+        "checklist": generate_lawyer_checklist(analyzed), "possible_next_steps": steps,
     }
-    return {"status": "success", "metadata": meta, "clauses": analyzed, "checklist": generate_lawyer_checklist(analyzed)}
 
 
 def analyze_document(
@@ -730,17 +777,17 @@ def analyze_document(
         gemini_api_key: Optional Google Gemini API key.
 
     Returns:
-        Dict[str, Any]: Dictionary containing status, metadata, clauses, checklist.
+        Dict[str, Any]: Dictionary containing status, metadata, clauses, checklist, possible_next_steps.
     """
     start = time.time()
     api_key, filename = _resolve_api_key_and_filename(filename_or_key, gemini_api_key)
     doc_text = source if isinstance(source, str) and ("\n" in source or len(source) > 260) else extract_document_text(source)
     try:
-        call_gemini_api(build_analysis_prompt(doc_text, filename), api_key)
+        gemini_res = call_gemini_api(build_analysis_prompt(doc_text, filename), api_key)
     except Exception as e:
-        return {"status": "error", "error": f"Gemini API failure: {str(e)}", "metadata": {}, "clauses": [], "checklist": []}
+        return {"status": "error", "error": f"Gemini API failure: {str(e)}", "metadata": {}, "clauses": [], "checklist": [], "possible_next_steps": []}
     analyzed, cat_counts, risk_counts = _assemble_clauses(extract_clauses(doc_text))
-    return _format_analysis_result(analyzed, cat_counts, risk_counts, start)
+    return _format_analysis_result(analyzed, cat_counts, risk_counts, start, _extract_next_steps(gemini_res))
 
 
 def _extract_risk_counts(clauses: List[Any]) -> Dict[str, int]:
@@ -921,21 +968,16 @@ def _analysis_json_schema() -> str:
     """
     return (
         '{\n'
-        '  "document_type": "string",\n'
-        '  "overall_summary": "string",\n'
+        '  "document_type": "string", "overall_summary": "string",\n'
         '  "risk_level": "high | medium | low",\n'
-        '  "clauses": [\n'
-        '    {\n'
-        '      "title": "string",\n'
-        '      "category": "string",\n'
-        '      "clause_text": "string",\n'
-        '      "risk_level": "high | medium | low",\n'
-        '      "plain_english": "string",\n'
-        '      "risk_reasons": ["string"]\n'
-        '    }\n'
-        '  ],\n'
+        '  "clauses": [{\n'
+        '    "title": "string", "category": "string", "clause_text": "string",\n'
+        '    "risk_level": "high | medium | low", "plain_english": "string",\n'
+        '    "risk_reasons": ["string"]\n'
+        '  }],\n'
         '  "lawyer_questions": ["string"],\n'
-        '  "action_checklist": ["string"]\n'
+        '  "action_checklist": ["string"],\n'
+        '  "possible_next_steps": ["string"]\n'
         '}'
     )
 
@@ -955,7 +997,9 @@ def build_analysis_prompt(document_text: str, filename: Optional[str] = None) ->
         f"You are a legal document analysis assistant (NOT a lawyer).\n"
         f"Analyze {doc_label} clause-by-clause.\n\n"
         f"IMPORTANT DISCLAIMER & INSTRUCTIONS:\n{LEGAL_DISCLAIMER}\n"
-        f"Your sole purpose is to provide informational analysis and prepare questions for legal consultation.\n\n"
+        f"Generate 2-4 generic next-step paths a user could consider (e.g. 'Negotiate the clause', "
+        f"'Accept as-is', 'Seek clarification before signing', 'Walk away from this term') "
+        f"framed strictly as informational paths, not legal recommendations.\n\n"
         f"DOCUMENT TEXT:\n---\n{document_text[:MAX_DOCUMENT_CHARS]}\n---\n\n"
         f"Analyze the clauses and provide your output strictly as a JSON object matching this schema:\n"
         f"{_analysis_json_schema()}"
