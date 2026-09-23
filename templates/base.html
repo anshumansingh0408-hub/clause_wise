@@ -398,7 +398,10 @@
     {% block extra_head %}{% endblock %}
 </head>
 
-<body class="bg-background text-foreground min-h-screen flex flex-col font-body antialiased">
+<body class="bg-background text-foreground min-h-screen flex flex-col font-body antialiased relative overflow-x-hidden">
+
+    <!-- Fullscreen 3D Animated Background Canvas -->
+    <canvas id="canvas-3d-bg" class="fixed inset-0 pointer-events-none w-full h-full" style="z-index: -1;" aria-hidden="true"></canvas>
 
     <!-- Accessibility: Skip to main content -->
     <a href="#main-content" class="skip-link">Skip to main content</a>
@@ -614,6 +617,235 @@
                 }, 360);
             });
         }
+    </script>
+
+    <!-- Three.js 3D Library from CDN -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+
+    <!-- Interactive 3D Site Background Animation Engine -->
+    <script>
+        (function () {
+            "use strict";
+
+            const canvas = document.getElementById("canvas-3d-bg");
+            if (!canvas) return;
+
+            const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+            // Graceful fallback to 2D canvas if WebGL or Three.js is unavailable
+            if (typeof THREE === "undefined" || !window.WebGLRenderingContext) {
+                run2DFallback(canvas);
+                return;
+            }
+
+            let renderer, scene, camera;
+            let plane, planePos, originalZ = [];
+            const floatingObjects = [];
+            let particles;
+            let mouseX = 0, mouseY = 0;
+            let targetCamX = 0, targetCamY = 3;
+            let scrollProgress = 0;
+
+            try {
+                renderer = new THREE.WebGLRenderer({
+                    canvas: canvas,
+                    alpha: true,
+                    antialias: true,
+                    powerPreference: "high-performance"
+                });
+                renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+                renderer.setSize(window.innerWidth, window.innerHeight);
+
+                scene = new THREE.Scene();
+                scene.fog = new THREE.FogExp2(0x09090b, 0.024);
+
+                camera = new THREE.PerspectiveCamera(55, window.innerWidth / window.innerHeight, 0.1, 1000);
+                camera.position.set(0, 3, 26);
+
+                // 1. 3D Undulating Terrain / Grid Wave Plane
+                const planeGeo = new THREE.PlaneGeometry(85, 85, 36, 36);
+                const planeMat = new THREE.MeshBasicMaterial({
+                    color: 0x14b8a6,
+                    wireframe: true,
+                    transparent: true,
+                    opacity: 0.17
+                });
+                plane = new THREE.Mesh(planeGeo, planeMat);
+                plane.rotation.x = -Math.PI / 2 + 0.22;
+                plane.position.y = -6.5;
+                plane.position.z = -4;
+                scene.add(plane);
+
+                planePos = planeGeo.attributes.position;
+                for (let i = 0; i < planePos.count; i++) {
+                    originalZ.push({ x: planePos.getX(i), y: planePos.getY(i) });
+                }
+
+                // 2. Floating 3D Geometric Crystals
+                const createGeo = (geom, color, opacity, pos, rotSpeed) => {
+                    const mat = new THREE.MeshBasicMaterial({
+                        color: color,
+                        wireframe: true,
+                        transparent: true,
+                        opacity: opacity
+                    });
+                    const mesh = new THREE.Mesh(geom, mat);
+                    mesh.position.set(pos[0], pos[1], pos[2]);
+                    mesh.userData = {
+                        rotSpeed: rotSpeed,
+                        baseY: pos[1],
+                        phase: Math.random() * Math.PI * 2
+                    };
+                    scene.add(mesh);
+                    floatingObjects.push(mesh);
+                    return mesh;
+                };
+
+                // Crystal shapes scattered at different depths
+                createGeo(new THREE.IcosahedronGeometry(2.3, 0), 0x14b8a6, 0.26, [-14, 5, -5], { x: 0.004, y: 0.007, z: 0.003 });
+                createGeo(new THREE.TorusGeometry(2.4, 0.45, 10, 24), 0x38bdf8, 0.24, [14, 2, -6], { x: 0.006, y: 0.005, z: 0.004 });
+                createGeo(new THREE.OctahedronGeometry(1.9, 0), 0x10b981, 0.22, [-9, -2, 2], { x: 0.005, y: -0.006, z: 0.004 });
+                createGeo(new THREE.DodecahedronGeometry(1.7, 0), 0x2dd4bf, 0.22, [11, 8, -8], { x: -0.005, y: 0.006, z: 0.002 });
+                createGeo(new THREE.TetrahedronGeometry(2.0, 0), 0x06b6d4, 0.18, [-17, 10, -12], { x: 0.003, y: 0.004, z: -0.005 });
+                createGeo(new THREE.TorusGeometry(1.8, 0.35, 8, 20), 0x14b8a6, 0.20, [8, -3, 0], { x: -0.007, y: 0.004, z: 0.003 });
+
+                // 3. 3D Particle Cloud / Starfield
+                const particleCount = 1000;
+                const particlePositions = new Float32Array(particleCount * 3);
+                const particleColors = new Float32Array(particleCount * 3);
+                const colorTeal = new THREE.Color(0x14b8a6);
+                const colorEmerald = new THREE.Color(0x10b981);
+                const colorCyan = new THREE.Color(0x38bdf8);
+
+                for (let i = 0; i < particleCount; i++) {
+                    const i3 = i * 3;
+                    particlePositions[i3] = (Math.random() - 0.5) * 85;
+                    particlePositions[i3 + 1] = (Math.random() - 0.5) * 60;
+                    particlePositions[i3 + 2] = (Math.random() - 0.5) * 55 - 5;
+
+                    const choice = Math.random();
+                    const c = choice < 0.45 ? colorTeal : (choice < 0.8 ? colorEmerald : colorCyan);
+                    particleColors[i3] = c.r;
+                    particleColors[i3 + 1] = c.g;
+                    particleColors[i3 + 2] = c.b;
+                }
+
+                const particleGeo = new THREE.BufferGeometry();
+                particleGeo.setAttribute('position', new THREE.BufferAttribute(particlePositions, 3));
+                particleGeo.setAttribute('color', new THREE.BufferAttribute(particleColors, 3));
+
+                const particleMat = new THREE.PointsMaterial({
+                    size: 1.8,
+                    vertexColors: true,
+                    transparent: true,
+                    opacity: 0.65,
+                    blending: THREE.AdditiveBlending
+                });
+                particles = new THREE.Points(particleGeo, particleMat);
+                scene.add(particles);
+
+                // User Interactions
+                window.addEventListener("pointermove", (e) => {
+                    mouseX = (e.clientX / window.innerWidth) * 2 - 1;
+                    mouseY = -(e.clientY / window.innerHeight) * 2 + 1;
+                }, { passive: true });
+
+                const updateScroll = () => {
+                    const maxScroll = Math.max(document.body.scrollHeight - window.innerHeight, 1);
+                    scrollProgress = window.scrollY / maxScroll;
+                };
+                window.addEventListener("scroll", updateScroll, { passive: true });
+                updateScroll();
+
+                window.addEventListener("resize", () => {
+                    camera.aspect = window.innerWidth / window.innerHeight;
+                    camera.updateProjectionMatrix();
+                    renderer.setSize(window.innerWidth, window.innerHeight);
+                });
+
+                // Animation loop
+                const clock = new THREE.Clock();
+                function animate() {
+                    requestAnimationFrame(animate);
+                    if (document.hidden) return;
+
+                    const elapsed = clock.getElapsedTime();
+
+                    if (!prefersReducedMotion) {
+                        // Animate 3D Wave Plane Vertices
+                        for (let i = 0; i < planePos.count; i++) {
+                            const u = originalZ[i].x;
+                            const v = originalZ[i].y;
+                            const z = Math.sin(u * 0.22 + elapsed * 1.1) * Math.cos(v * 0.22 + elapsed * 0.9) * 1.5;
+                            planePos.setZ(i, z);
+                        }
+                        planePos.needsUpdate = true;
+
+                        // Animate Floating Geometries
+                        floatingObjects.forEach(obj => {
+                            obj.rotation.x += obj.userData.rotSpeed.x;
+                            obj.rotation.y += obj.userData.rotSpeed.y;
+                            obj.rotation.z += obj.userData.rotSpeed.z;
+                            obj.position.y = obj.userData.baseY + Math.sin(elapsed * 0.85 + obj.userData.phase) * 0.65;
+                        });
+
+                        // Particle drift
+                        particles.rotation.y = elapsed * 0.015 + scrollProgress * 0.35;
+                        particles.rotation.x = mouseX * 0.025;
+                    }
+
+                    // Smooth camera parallax
+                    targetCamX = mouseX * 3.5;
+                    targetCamY = 3 + mouseY * 2.2 - scrollProgress * 3.5;
+                    camera.position.x += (targetCamX - camera.position.x) * 0.04;
+                    camera.position.y += (targetCamY - camera.position.y) * 0.04;
+                    camera.lookAt(0, -scrollProgress * 2, 0);
+
+                    renderer.render(scene, camera);
+                }
+
+                animate();
+
+            } catch (err) {
+                console.warn("Three.js initialization failed, using 2D fallback:", err);
+                run2DFallback(canvas);
+            }
+
+            function run2DFallback(cvs) {
+                const ctx = cvs.getContext("2d");
+                if (!ctx) return;
+                let w = cvs.width = window.innerWidth;
+                let h = cvs.height = window.innerHeight;
+                window.addEventListener("resize", () => {
+                    w = cvs.width = window.innerWidth;
+                    h = cvs.height = window.innerHeight;
+                });
+                const pts = Array.from({ length: 90 }, () => ({
+                    x: Math.random() * w,
+                    y: Math.random() * h,
+                    z: Math.random() * 800 + 200,
+                    vx: (Math.random() - 0.5) * 0.5,
+                    vy: (Math.random() - 0.5) * 0.5
+                }));
+                function draw() {
+                    ctx.clearRect(0, 0, w, h);
+                    ctx.fillStyle = "rgba(20, 184, 166, 0.45)";
+                    pts.forEach(p => {
+                        p.x += p.vx;
+                        p.y += p.vy;
+                        if (p.x < 0) p.x = w;
+                        if (p.x > w) p.x = 0;
+                        if (p.y < 0) p.y = h;
+                        if (p.y > h) p.y = 0;
+                        ctx.beginPath();
+                        ctx.arc(p.x, p.y, Math.max(1, 150 / p.z), 0, Math.PI * 2);
+                        ctx.fill();
+                    });
+                    requestAnimationFrame(draw);
+                }
+                draw();
+            }
+        })();
     </script>
 
     {% block scripts %}{% endblock %}
