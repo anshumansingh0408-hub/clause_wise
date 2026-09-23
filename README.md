@@ -6,7 +6,7 @@
 
 ---
 
-## ⚡ Tech Stack
+##  Tech Stack
 
 | Layer | Technologies |
 | :--- | :--- |
@@ -82,7 +82,7 @@ Open **http://127.0.0.1:8080** in your browser.
 
 ---
 
-## 🧪 Testing
+##  Testing
 
 Run all 51 automated unit and integration tests:
 ```bash
