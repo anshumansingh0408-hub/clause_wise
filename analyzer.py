@@ -658,6 +658,36 @@ def generate_lawyer_checklist(clauses: List[Dict[str, Any]]) -> List[Dict[str, A
     return checklist
 
 
+def build_gemini_payload(
+    prompt: str,
+    system_instruction: Optional[str] = None,
+    temperature: float = 0.2,
+    max_output_tokens: int = 4096,
+) -> Dict[str, Any]:
+    """Constructs Gemini API request payload with temperature 0.2 and capped maxOutputTokens.
+
+    Args:
+        prompt: User prompt text.
+        system_instruction: Optional system instruction.
+        temperature: Sampling temperature for fast deterministic outputs (0.2).
+        max_output_tokens: Maximum tokens in generationConfig (capped at 4096).
+
+    Returns:
+        Dict[str, Any]: Request payload dict.
+    """
+    payload: Dict[str, Any] = {
+        "contents": [{"parts": [{"text": prompt}]}],
+        "generationConfig": {
+            "response_mime_type": "application/json",
+            "temperature": temperature,
+            "maxOutputTokens": min(max_output_tokens, 4096),
+        },
+    }
+    if system_instruction:
+        payload["systemInstruction"] = {"parts": [{"text": system_instruction}]}
+    return payload
+
+
 def call_gemini_api_enrichment(text_snippet: str, api_key: str) -> Optional[Dict[str, Any]]:
     """Calls Gemini API for single clause plain-English enrichment.
 
@@ -676,7 +706,12 @@ def call_gemini_api_enrichment(text_snippet: str, api_key: str) -> Optional[Dict
         "and identify any high-risk term for the counterparty. Return JSON with keys 'plain_english' and 'risk_note':\n\n"
         f"{text_snippet[:MAX_SNIPPET_LEN]}"
     )
-    return call_gemini_api(prompt, api_key)
+    return call_gemini_api(
+        prompt,
+        api_key,
+        temperature=CONFIG.get("temperature", 0.2),
+        max_output_tokens=CONFIG.get("max_output_tokens", 4096),
+    )
 
 
 # ============================================================================
@@ -854,7 +889,12 @@ def analyze_document(
     api_key, filename = _resolve_api_key_and_filename(filename_or_key, gemini_api_key)
     doc_text = source if isinstance(source, str) and ("\n" in source or len(source) > 260) else extract_document_text(source)
     try:
-        gemini_res = call_gemini_api(build_analysis_prompt(doc_text, filename), api_key)
+        gemini_res = call_gemini_api(
+            build_analysis_prompt(doc_text, filename),
+            api_key,
+            temperature=CONFIG.get("temperature", 0.2),
+            max_output_tokens=CONFIG.get("max_output_tokens", 4096),
+        )
     except Exception as e:
         return {"status": "error", "error": f"Gemini API failure: {str(e)}", "metadata": {}, "clauses": [], "checklist": [], "possible_next_steps": []}
     analyzed, cat_counts, risk_counts = _assemble_clauses(extract_clauses(doc_text))

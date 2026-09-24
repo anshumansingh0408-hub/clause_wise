@@ -80,7 +80,7 @@ UPLOAD_FOLDER = "uploads"
 MAX_FILE_SIZE_MB = 10
 RATE_LIMIT_REQUESTS = 15
 RATE_LIMIT_WINDOW = 60
-CACHE_TTL = 3600
+CACHE_TTL = 900
 CLEANUP_INTERVAL_REQUESTS = 50
 MAX_QUESTION_LEN = 300
 DEFAULT_CONFIDENCE = 0.90
@@ -290,6 +290,24 @@ def add_security_headers(response: Response) -> Response:
         " img-src 'self' data: https:;"
         " connect-src 'self';"
     )
+    return response
+
+
+@app.after_request
+def add_static_cache_control(response: Response) -> Response:
+    """Appends Cache-Control header for static asset requests only.
+
+    Args:
+        response: Outgoing HTTP response.
+
+    Returns:
+        Response: Response with Cache-Control header if request path is under /static/.
+
+    Raises:
+        None.
+    """
+    if request.path.startswith("/static/"):
+        response.headers["Cache-Control"] = "public, max-age=3600"
     return response
 
 
@@ -737,7 +755,8 @@ def _store_analysis_cache(cache_key: str, analysis: Dict[str, Any], summary: Dic
         None.
     """
     if cache_key:
-        CACHE[cache_key] = {"result": analysis, "risk_summary": summary, "timestamp": time.time()}
+        cached_result = {k: v for k, v in analysis.items() if k not in ("raw_text", "document_text", "extracted_text")}
+        CACHE[cache_key] = {"result": cached_result, "risk_summary": summary, "timestamp": time.time()}
 
 
 def _store_and_respond_analysis(
@@ -864,7 +883,8 @@ def _store_comparison_cache(cache_key: str, res: Dict[str, Any], metrics: Dict[s
         None.
     """
     if cache_key:
-        CACHE[cache_key] = {"result": res, "metrics": metrics, "timestamp": time.time()}
+        cached_res = {k: v for k, v in res.items() if k not in ("raw_text", "document_text", "extracted_text", "text_a", "text_b")}
+        CACHE[cache_key] = {"result": cached_res, "metrics": metrics, "timestamp": time.time()}
 
 
 def _execute_comparison_job(

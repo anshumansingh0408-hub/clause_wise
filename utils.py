@@ -480,13 +480,18 @@ def _parse_candidate_text(response: requests.Response) -> Optional[str]:
 
 
 def _build_gemini_json_payload(
-    prompt: str, system_instruction: Optional[str]
+    prompt: str,
+    system_instruction: Optional[str],
+    temperature: float = DEFAULT_TEMPERATURE,
+    max_output_tokens: int = DEFAULT_MAX_OUTPUT_TOKENS,
 ) -> Dict[str, Any]:
     """Builds payload for JSON mode Gemini request.
 
     Args:
         prompt: User prompt text.
         system_instruction: Optional system instruction.
+        temperature: Sampling temperature for model response.
+        max_output_tokens: Token generation limit.
 
     Returns:
         Dict[str, Any]: Formatted request payload.
@@ -498,8 +503,8 @@ def _build_gemini_json_payload(
         "contents": [{"parts": [{"text": prompt}]}],
         "generationConfig": {
             "response_mime_type": "application/json",
-            "temperature": DEFAULT_TEMPERATURE,
-            "maxOutputTokens": DEFAULT_MAX_OUTPUT_TOKENS,
+            "temperature": temperature,
+            "maxOutputTokens": min(max_output_tokens, 4096),
         },
     }
     if system_instruction:
@@ -555,7 +560,11 @@ def _parse_json_markdown(raw_text: str) -> Optional[Dict[str, Any]]:
 
 
 def call_gemini_api(
-    prompt: str, api_key: str, system_instruction: Optional[str] = None
+    prompt: str,
+    api_key: str,
+    system_instruction: Optional[str] = None,
+    temperature: float = DEFAULT_TEMPERATURE,
+    max_output_tokens: int = DEFAULT_MAX_OUTPUT_TOKENS,
 ) -> Optional[Dict[str, Any]]:
     """Calls Google Gemini API with prompt and returns parsed JSON response.
 
@@ -563,6 +572,8 @@ def call_gemini_api(
         prompt: User prompt sent to the Gemini model.
         api_key: Google Gemini API key.
         system_instruction: Optional system instruction for the model.
+        temperature: Sampling temperature (defaults to 0.2).
+        max_output_tokens: Maximum tokens in generationConfig (capped at 4096).
 
     Returns:
         Optional[Dict[str, Any]]: Parsed JSON dictionary, or None if failed.
@@ -572,7 +583,9 @@ def call_gemini_api(
     """
     if _is_invalid_key(api_key):
         return None
-    payload = _build_gemini_json_payload(prompt, system_instruction)
+    payload = _build_gemini_json_payload(
+        prompt, system_instruction, temperature=temperature, max_output_tokens=max_output_tokens
+    )
     resp = _send_gemini_request(payload, api_key, timeout=DEFAULT_TIMEOUT_SECONDS)
     if not resp:
         return None

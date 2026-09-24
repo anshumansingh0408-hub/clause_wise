@@ -27,9 +27,11 @@ from utils import (
 )
 
 
-# ============================================================================
-# CONFIG & CONSTANTS
-# ============================================================================
+CONFIG = {
+    "timeout": 30,
+    "temperature": 0.2,
+    "max_output_tokens": 4096,
+}
 
 SIMILARITY_MATCH_THRESHOLD = 0.50
 TEXT_SIMILARITY_UNCHANGED = 0.95
@@ -570,6 +572,36 @@ def _calculate_comp_counts(comps: List[Dict[str, Any]]) -> Dict[str, int]:
     }
 
 
+def build_comparison_payload(
+    prompt: str,
+    system_instruction: Optional[str] = None,
+    temperature: float = 0.2,
+    max_output_tokens: int = 4096,
+) -> Dict[str, Any]:
+    """Constructs Gemini API comparison request payload with temperature 0.2 and capped maxOutputTokens.
+
+    Args:
+        prompt: User prompt text.
+        system_instruction: Optional system instruction.
+        temperature: Sampling temperature for fast deterministic outputs (0.2).
+        max_output_tokens: Maximum tokens in generationConfig (capped at 4096).
+
+    Returns:
+        Dict[str, Any]: Request payload dict.
+    """
+    payload: Dict[str, Any] = {
+        "contents": [{"parts": [{"text": prompt}]}],
+        "generationConfig": {
+            "response_mime_type": "application/json",
+            "temperature": temperature,
+            "maxOutputTokens": min(max_output_tokens, 4096),
+        },
+    }
+    if system_instruction:
+        payload["systemInstruction"] = {"parts": [{"text": system_instruction}]}
+    return payload
+
+
 def _run_comparison_engine(
     text_a: str, filename_a: str, text_b: str, filename_b: str, api_key: str
 ) -> Dict[str, Any]:
@@ -590,7 +622,13 @@ def _run_comparison_engine(
     """
     prompt = build_comparison_prompt(text_a, filename_a, text_b, filename_b)
     system_inst = "You are an expert legal document comparison assistant. Return valid JSON only."
-    api_res = call_gemini_api(prompt, api_key, system_instruction=system_inst)
+    api_res = call_gemini_api(
+        prompt,
+        api_key,
+        system_instruction=system_inst,
+        temperature=CONFIG.get("temperature", 0.2),
+        max_output_tokens=CONFIG.get("max_output_tokens", 4096),
+    )
     res = api_res if (isinstance(api_res, dict) and "overall_comparison" in api_res and "differing_terms" in api_res) else _heuristic_comparison_fallback(text_a, filename_a, text_b, filename_b)
     res["status"] = "success"
     res["metrics"] = calculate_comparison_metrics(res)
