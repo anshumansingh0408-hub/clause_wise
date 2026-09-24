@@ -15,7 +15,7 @@
 | **Document Ingestion** | `pypdf` (PDF extraction), `python-docx` (Word), `utf-8` text stream |
 | **Frontend & 3D UI** | Three.js (WebGL 3D background wave & particle scene), Tailwind CSS, Vanilla JS |
 | **Testing & Quality** | Pytest (51 tests), Unittest, Flake8 |
-| **Security & Privacy** | In-memory ephemeral file cleanup, IP rate limiting, CSP headers |
+| **Security & Privacy** | In-memory ephemeral file cleanup, IP rate limiting, CSP headers|
 
 ---
 
