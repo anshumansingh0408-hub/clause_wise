@@ -30,6 +30,7 @@ from flask import (
     send_file,
     url_for,
 )
+from flask_compress import Compress
 
 from analyzer import (
     analyze_document,
@@ -164,6 +165,7 @@ _TPL_DIR = os.path.join(_BASE_DIR, "templates") if os.path.isdir(os.path.join(_B
 _ST_DIR = os.path.join(_BASE_DIR, "static") if os.path.isdir(os.path.join(_BASE_DIR, "static")) else os.path.join(_BASE_DIR, "clausewise", "static")
 
 app = Flask(__name__, template_folder=_TPL_DIR, static_folder=_ST_DIR)
+Compress(app)
 app.secret_key = os.environ.get("FLASK_SECRET_KEY", "dev-secret-change-in-production")
 os.makedirs(CONFIG["UPLOAD_FOLDER"], exist_ok=True)
 app.config["MAX_CONTENT_LENGTH"] = CONFIG["MAX_FILE_SIZE_MB"] * 1024 * 1024
@@ -188,6 +190,9 @@ def inject_globals() -> Dict[str, Any]:
 
     Returns:
         Dict[str, Any]: Dictionary of global variables available to templates.
+
+    Raises:
+        None.
     """
     return {
         "CLAUSE_CATEGORIES": CLAUSE_CATEGORIES,
@@ -199,12 +204,26 @@ def inject_globals() -> Dict[str, Any]:
 
 @app.before_request
 def start_timer() -> None:
-    """Starts request timer for tracking response latency."""
+    """Starts request timer for tracking response latency.
+
+    Returns:
+        None.
+
+    Raises:
+        None.
+    """
     g.start = time.time()
 
 
 def _clean_expired_cache() -> None:
-    """Removes expired entries from CACHE based on CACHE_TTL."""
+    """Removes expired entries from CACHE based on CACHE_TTL.
+
+    Returns:
+        None.
+
+    Raises:
+        None.
+    """
     now = time.time()
     expired = [k for k, v in CACHE.items() if now - v.get("timestamp", 0) >= CONFIG["CACHE_TTL"]]
     for k in expired:
@@ -213,7 +232,14 @@ def _clean_expired_cache() -> None:
 
 @app.before_request
 def periodic_cleanup() -> None:
-    """Periodically purges stale files from the upload folder and expired cache."""
+    """Periodically purges stale files from the upload folder and expired cache.
+
+    Returns:
+        None.
+
+    Raises:
+        None.
+    """
     global REQUEST_COUNTER
     REQUEST_COUNTER += 1
     if REQUEST_COUNTER % CLEANUP_INTERVAL_REQUESTS == 0:
@@ -230,6 +256,9 @@ def log_request_time(response: Response) -> Response:
 
     Returns:
         Response: Mutated HTTP response with latency header.
+
+    Raises:
+        None.
     """
     if hasattr(g, "start"):
         duration = time.time() - g.start
@@ -246,6 +275,9 @@ def add_security_headers(response: Response) -> Response:
 
     Returns:
         Response: Response augmented with Content-Security-Policy and protective headers.
+
+    Raises:
+        None.
     """
     response.headers["X-Content-Type-Options"] = "nosniff"
     response.headers["X-Frame-Options"] = "DENY"
@@ -274,6 +306,9 @@ def handle_bad_request(e: Exception) -> Tuple[Response, int]:
 
     Returns:
         Tuple[Response, int]: JSON response and HTTP 400 status.
+
+    Raises:
+        None.
     """
     msg = getattr(e, "description", str(e))
     return jsonify({"error": msg, "code": "BAD_REQUEST"}), HTTP_BAD_REQUEST
@@ -288,6 +323,9 @@ def handle_not_found(e: Exception) -> Tuple[Response, int]:
 
     Returns:
         Tuple[Response, int]: JSON response and HTTP 404 status.
+
+    Raises:
+        None.
     """
     return jsonify({"error": "Requested resource was not found.", "code": "NOT_FOUND"}), HTTP_NOT_FOUND
 
@@ -301,6 +339,9 @@ def handle_payload_too_large(e: Exception) -> Tuple[Response, int]:
 
     Returns:
         Tuple[Response, int]: JSON response and HTTP 413 status.
+
+    Raises:
+        None.
     """
     return jsonify({"error": f"Uploaded file exceeds limit of {CONFIG['MAX_FILE_SIZE_MB']}MB.", "code": "FILE_TOO_LARGE"}), HTTP_TOO_LARGE
 
@@ -314,6 +355,9 @@ def handle_rate_limit_exceeded(e: Exception) -> Tuple[Response, int]:
 
     Returns:
         Tuple[Response, int]: JSON response and HTTP 429 status.
+
+    Raises:
+        None.
     """
     return jsonify({"error": "Rate limit exceeded. Please wait a moment.", "code": "RATE_LIMITED"}), HTTP_RATE_LIMITED
 
@@ -327,6 +371,9 @@ def handle_server_error(e: Exception) -> Tuple[Response, int]:
 
     Returns:
         Tuple[Response, int]: JSON response and HTTP 500 status.
+
+    Raises:
+        None.
     """
     return jsonify({"error": "An internal server error occurred.", "code": "INTERNAL_SERVER_ERROR"}), HTTP_SERVER_ERROR
 
@@ -346,6 +393,9 @@ def _find_best_qa_clause(
 
     Returns:
         Tuple[Optional[Dict[str, Any]], int]: Best clause and score.
+
+    Raises:
+        None.
     """
     best_clause, best_score = None, 0
     for clause in clauses:
@@ -366,6 +416,9 @@ def _format_fallback_matched(question: str, clause: Dict[str, Any]) -> str:
 
     Returns:
         str: Formatted grounded response.
+
+    Raises:
+        None.
     """
     title = clause.get("title", "Relevant Provision")
     raw = redact_preview(clause.get("text", ""), 200)
@@ -386,6 +439,9 @@ def generate_fallback_qa_answer(question: str, analysis_result: Dict[str, Any]) 
 
     Returns:
         str: Fact-based response extracted from stored clauses, with disclaimer.
+
+    Raises:
+        None.
     """
     q_words = set(re.findall(r"\b\w{4,}\b", question.lower()))
     best_clause, best_score = _find_best_qa_clause(analysis_result.get("clauses", []), q_words)
@@ -409,6 +465,9 @@ def index() -> str:
 
     Returns:
         str: Rendered index.html template.
+
+    Raises:
+        None.
     """
     return render_template("index.html")
 
@@ -419,6 +478,9 @@ def about() -> str:
 
     Returns:
         str: Rendered about.html template.
+
+    Raises:
+        None.
     """
     return render_template("about.html")
 
@@ -428,6 +490,9 @@ def _get_analyze_sources() -> Tuple[str, str, Optional[Response]]:
 
     Returns:
         Tuple[str, str, Optional[Response]]: Text, name, and redirect if error.
+
+    Raises:
+        None.
     """
     if request.method == "POST":
         file = request.files.get("document_file")
@@ -451,6 +516,9 @@ def analyze() -> Union[str, Response]:
 
     Returns:
         Union[str, Response]: Rendered HTML or redirect on validation error.
+
+    Raises:
+        None.
     """
     doc_text, source_name, err_redirect = _get_analyze_sources()
     if err_redirect:
@@ -468,6 +536,9 @@ def _get_demo_compare_pair() -> Tuple[str, str, str, str]:
 
     Returns:
         Tuple[str, str, str, str]: (text_a, name_a, text_b, name_b).
+
+    Raises:
+        None.
     """
     text_a = SAMPLE_CONTRACTS["mutual_nda"]["content"]
     text_b = text_a.replace(
@@ -484,6 +555,9 @@ def _extract_compare_post() -> Tuple[str, str, str, str]:
 
     Returns:
         Tuple[str, str, str, str]: (text_a, name_a, text_b, name_b).
+
+    Raises:
+        None.
     """
     file_a, file_b = request.files.get("file_a"), request.files.get("file_b")
     text_a = extract_text_from_file(file_a) if file_a and file_a.filename else request.form.get("text_a", "")
@@ -499,6 +573,9 @@ def compare() -> Union[str, Response]:
 
     Returns:
         Union[str, Response]: Rendered compare.html page.
+
+    Raises:
+        None.
     """
     if request.method == "POST":
         text_a, name_a, text_b, name_b = _extract_compare_post()
@@ -523,6 +600,11 @@ def _enrich_badges(analysis: Dict[str, Any]) -> None:
 
     Args:
         analysis: Analysis dictionary mutated in-place.
+
+    Returns:
+        None.
+    Raises:
+        None.
     """
     conf = analysis.get("confidence_score", analysis.get("metadata", {}).get("confidence_score", DEFAULT_CONFIDENCE))
     badge = format_confidence_badge(conf)
@@ -539,6 +621,11 @@ def _safe_remove(filepath: str) -> None:
 
     Args:
         filepath: Path of file to delete.
+
+    Returns:
+        None.
+    Raises:
+        None.
     """
     if os.path.exists(filepath):
         try:
@@ -555,6 +642,9 @@ def _validate_api_file(file_obj: Any) -> Optional[Tuple[Response, int]]:
 
     Returns:
         Optional[Tuple[Response, int]]: Error response tuple or None if valid.
+
+    Raises:
+        None.
     """
     if not file_obj or not file_obj.filename:
         return jsonify({"error": "Missing or unselected file in request.", "code": "MISSING_FILE"}), HTTP_BAD_REQUEST
@@ -572,6 +662,9 @@ def _validate_compare_files(f_a: Any, f_b: Any) -> Optional[Tuple[Response, int]
 
     Returns:
         Optional[Tuple[Response, int]]: Error response tuple or None if valid.
+
+    Raises:
+        None.
     """
     if not f_a or not f_b or not f_a.filename or not f_b.filename:
         return jsonify({"error": "Both 'file_a' and 'file_b' must be provided.", "code": "MISSING_FILES"}), HTTP_BAD_REQUEST
@@ -588,6 +681,9 @@ def _extract_text_for_caching(filepath: str) -> str:
 
     Returns:
         str: Extracted plain text or decoded binary content.
+
+    Raises:
+        None.
     """
     try:
         return extract_document_text(filepath)
@@ -608,6 +704,9 @@ def _get_cached_analysis(cache_key: str, job_id: str) -> Optional[Tuple[Response
 
     Returns:
         Optional[Tuple[Response, int]]: Cached JSON response tuple or None on miss.
+
+    Raises:
+        None.
     """
     now = time.time()
     if cache_key and cache_key in CACHE and now - CACHE[cache_key].get("timestamp", 0) < CONFIG["CACHE_TTL"]:
@@ -631,6 +730,11 @@ def _store_analysis_cache(cache_key: str, analysis: Dict[str, Any], summary: Dic
         cache_key: MD5 content hash of extracted document text.
         analysis: Full analyzed document dictionary.
         summary: Computed risk breakdown summary.
+
+    Returns:
+        None.
+    Raises:
+        None.
     """
     if cache_key:
         CACHE[cache_key] = {"result": analysis, "risk_summary": summary, "timestamp": time.time()}
@@ -649,6 +753,9 @@ def _store_and_respond_analysis(
 
     Returns:
         Tuple[Response, int]: JSON response and HTTP 200.
+
+    Raises:
+        None.
     """
     _enrich_badges(analysis)
     _store_analysis_cache(cache_key, analysis, summary)
@@ -666,6 +773,9 @@ def _process_analysis_upload(filepath: str, raw_filename: str, job_id: str) -> T
 
     Returns:
         Tuple[Response, int]: JSON response and HTTP status code.
+
+    Raises:
+        None.
     """
     doc_text = _extract_text_for_caching(filepath)
     cache_key = generate_cache_key(doc_text) if doc_text else ""
@@ -686,6 +796,9 @@ def api_analyze() -> Tuple[Response, int]:
 
     Returns:
         Tuple[Response, int]: JSON response and HTTP status code.
+
+    Raises:
+        None.
     """
     if not check_rate_limit(request.remote_addr or "127.0.0.1", RATE_LIMIT_TRACKER, CONFIG["RATE_LIMIT_REQUESTS"], CONFIG["RATE_LIMIT_WINDOW"]):
         return jsonify({"error": "Rate limit exceeded. Please try again later.", "code": "RATE_LIMITED"}), HTTP_RATE_LIMITED
@@ -708,10 +821,56 @@ def api_analyze() -> Tuple[Response, int]:
         _safe_remove(filepath)
 
 
+def _get_cached_comparison(cache_key: str, job_id: str) -> Optional[Tuple[Response, int]]:
+    """Retrieves unexpired cached comparison for document hash if available.
+
+    Args:
+        cache_key: MD5 content hash of extracted documents text.
+        job_id: Unique job identifier for the current comparison.
+
+    Returns:
+        Optional[Tuple[Response, int]]: Cached JSON response tuple or None on miss.
+
+    Raises:
+        None.
+    """
+    now = time.time()
+    if cache_key and cache_key in CACHE and now - CACHE[cache_key].get("timestamp", 0) < CONFIG["CACHE_TTL"]:
+        cached = CACHE[cache_key]
+        res, metrics = cached["result"], cached["metrics"]
+        JOBS[job_id] = {
+            "status": "completed", "result": res, "metrics": metrics,
+            "error": None, "type": "compare", "cached": True,
+        }
+        return jsonify({
+            "job_id": job_id, "result": res, "metrics": metrics,
+            "disclaimer": LEGAL_DISCLAIMER, "cached": True,
+        }), HTTP_OK
+    return None
+
+
+def _store_comparison_cache(cache_key: str, res: Dict[str, Any], metrics: Dict[str, Any]) -> None:
+    """Saves completed comparison and metrics to cache with current timestamp.
+
+    Args:
+        cache_key: MD5 content hash of extracted documents text.
+        res: Full comparison result dictionary.
+        metrics: Computed comparison metrics dictionary.
+
+    Returns:
+        None.
+
+    Raises:
+        None.
+    """
+    if cache_key:
+        CACHE[cache_key] = {"result": res, "metrics": metrics, "timestamp": time.time()}
+
+
 def _execute_comparison_job(
     filepath_a: str, name_a: str, filepath_b: str, name_b: str, job_id: str
 ) -> Tuple[Response, int]:
-    """Executes comparison and stores result in JOBS.
+    """Executes comparison, checks cache, and stores result in JOBS.
 
     Args:
         filepath_a: Path to first document.
@@ -722,15 +881,25 @@ def _execute_comparison_job(
 
     Returns:
         Tuple[Response, int]: JSON response and HTTP status code.
+
+    Raises:
+        None.
     """
+    text_a = _extract_text_for_caching(filepath_a)
+    text_b = _extract_text_for_caching(filepath_b)
+    cache_key = generate_cache_key(text_a, text_b) if (text_a and text_b) else ""
+    cached_resp = _get_cached_comparison(cache_key, job_id)
+    if cached_resp:
+        return cached_resp
     res = compare_documents(filepath_a, name_a, filepath_b, name_b, GEMINI_API_KEY)
     if not res or res.get("status") == "error":
         msg = res.get("error", "Comparison failed.") if res else "Empty comparison returned."
         JOBS[job_id] = {"status": "error", "result": None, "error": msg, "type": "compare"}
         return jsonify({"error": msg, "code": "COMPARISON_FAILURE"}), HTTP_SERVER_ERROR
     metrics = calculate_comparison_metrics(res)
-    JOBS[job_id] = {"status": "completed", "result": res, "metrics": metrics, "error": None, "type": "compare"}
-    return jsonify({"job_id": job_id, "result": res, "metrics": metrics, "disclaimer": LEGAL_DISCLAIMER}), HTTP_OK
+    _store_comparison_cache(cache_key, res, metrics)
+    JOBS[job_id] = {"status": "completed", "result": res, "metrics": metrics, "error": None, "type": "compare", "cached": False}
+    return jsonify({"job_id": job_id, "result": res, "metrics": metrics, "disclaimer": LEGAL_DISCLAIMER, "cached": False}), HTTP_OK
 
 
 @app.route("/api/compare", methods=["POST"])
@@ -739,6 +908,9 @@ def api_compare() -> Tuple[Response, int]:
 
     Returns:
         Tuple[Response, int]: JSON response and HTTP status code.
+
+    Raises:
+        None.
     """
     if not check_rate_limit(request.remote_addr or "127.0.0.1", RATE_LIMIT_TRACKER, CONFIG["RATE_LIMIT_REQUESTS"], CONFIG["RATE_LIMIT_WINDOW"]):
         return jsonify({"error": "Rate limit exceeded. Please try again later.", "code": "RATE_LIMITED"}), HTTP_RATE_LIMITED
@@ -768,6 +940,9 @@ def _build_qa_context(analysis_res: Dict[str, Any]) -> str:
 
     Returns:
         str: Concatenated clause context string.
+
+    Raises:
+        None.
     """
     clauses_context = []
     for idx, c in enumerate(analysis_res.get("clauses", []), 1):
@@ -786,6 +961,9 @@ def _answer_qa_prompt(question: str, context: str, analysis: Dict[str, Any]) -> 
 
     Returns:
         str: Formatted QA answer.
+
+    Raises:
+        None.
     """
     sys_inst = (
         "You are ClauseWise Assistant. Answer the question strictly using the provided document context. "
@@ -802,6 +980,9 @@ def api_ask() -> Tuple[Response, int]:
 
     Returns:
         Tuple[Response, int]: JSON response with answer.
+
+    Raises:
+        None.
     """
     if not check_rate_limit(request.remote_addr or "127.0.0.1", RATE_LIMIT_TRACKER, CONFIG["RATE_LIMIT_REQUESTS"], CONFIG["RATE_LIMIT_WINDOW"]):
         return jsonify({"error": "Rate limit exceeded. Please try again later.", "code": "RATE_LIMITED"}), HTTP_RATE_LIMITED
@@ -829,6 +1010,9 @@ def api_status(job_id: str) -> Tuple[Response, int]:
 
     Returns:
         Tuple[Response, int]: Status dictionary and HTTP status code.
+
+    Raises:
+        None.
     """
     if not job_id or job_id not in JOBS:
         return jsonify({"error": f"Job ID '{job_id}' not found.", "code": "NOT_FOUND"}), HTTP_NOT_FOUND
@@ -841,6 +1025,9 @@ def api_sample() -> Tuple[Response, int]:
 
     Returns:
         Tuple[Response, int]: JSON response with sample scenarios.
+
+    Raises:
+        None.
     """
     return jsonify(SAMPLE_PREVIEWS), HTTP_OK
 
@@ -854,6 +1041,9 @@ def get_sample_contract(sample_key: str) -> Tuple[Response, int]:
 
     Returns:
         Tuple[Response, int]: Sample contract JSON or 404 error.
+
+    Raises:
+        None.
     """
     if sample_key in SAMPLE_CONTRACTS:
         return jsonify(SAMPLE_CONTRACTS[sample_key]), HTTP_OK
@@ -869,6 +1059,9 @@ def _build_checklist_markdown(items: List[Dict[str, Any]], title: str) -> str:
 
     Returns:
         str: Formatted Markdown string.
+
+    Raises:
+        None.
     """
     lines = [
         f"# ClauseWise Lawyer-Prep Checklist: {title}", "",
@@ -890,6 +1083,9 @@ def export_checklist() -> Response:
 
     Returns:
         Response: Flask send_file response streaming markdown buffer.
+
+    Raises:
+        None.
     """
     data = request.get_json(silent=True) or {}
     content = _build_checklist_markdown(data.get("items", []), data.get("title", "Contract Analysis"))
@@ -907,6 +1103,9 @@ def health() -> Tuple[Response, int]:
 
     Returns:
         Tuple[Response, int]: JSON health status and HTTP 200.
+
+    Raises:
+        None.
     """
     return jsonify({"status": "healthy", "service": "clausewise"}), HTTP_OK
 

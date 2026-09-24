@@ -80,6 +80,9 @@ def _comparison_json_schema() -> str:
 
     Returns:
         str: JSON schema text.
+
+    Raises:
+        None.
     """
     return COMPARISON_JSON_SCHEMA
 
@@ -97,6 +100,9 @@ def build_comparison_prompt(
 
     Returns:
         str: A structured prompt string requiring a strict JSON response.
+
+    Raises:
+        None.
     """
     snippet_a = doc_a_text[:MAX_DOC_CHARS_COMPARISON]
     snippet_b = doc_b_text[:MAX_DOC_CHARS_COMPARISON]
@@ -123,6 +129,9 @@ def _count_high_significance(items: List[Any]) -> int:
 
     Returns:
         int: Number of items with high significance.
+
+    Raises:
+        None.
     """
     count = 0
     for item in items:
@@ -141,6 +150,9 @@ def calculate_comparison_metrics(comparison_result: Dict[str, Any]) -> Dict[str,
 
     Returns:
         Dict[str, int]: Counts of total differences, missing clauses, and high significance items.
+
+    Raises:
+        None.
     """
     if not isinstance(comparison_result, dict):
         return {"total_differences": 0, "missing_clauses_count": 0, "differing_terms_count": 0, "high_significance_count": 0}
@@ -169,6 +181,9 @@ def _find_best_clause_match(
 
     Returns:
         Tuple[Optional[Dict[str, Any]], Optional[int], float]: Match, index, similarity.
+
+    Raises:
+        None.
     """
     best_match, best_sim, best_idx = None, 0.0, None
     for idx, cb in enumerate(clauses_b):
@@ -191,6 +206,9 @@ def _determine_favors(ca: Dict[str, Any], cb: Dict[str, Any], name_a: str, name_
 
     Returns:
         Tuple[str, str]: Favors description and significance string.
+
+    Raises:
+        None.
     """
     ranks = {"low": 1, "medium": 2, "high": 3}
     rank_a = ranks.get(ca.get("risk", {}).get("level", "low"), 1)
@@ -215,6 +233,9 @@ def _build_heuristic_differing_item(
 
     Returns:
         Dict[str, Any]: Differing term record.
+
+    Raises:
+        None.
     """
     favors, sig = _determine_favors(ca, cb, name_a, name_b)
     topic = ca.get("title", ca.get("category", "General"))
@@ -238,6 +259,9 @@ def _find_unmatched_b_clauses(
 
     Returns:
         List[Dict[str, Any]]: Items missing in A.
+
+    Raises:
+        None.
     """
     missing_in_a = []
     for idx, cb in enumerate(clauses_b):
@@ -264,6 +288,11 @@ def _match_single_clause(
         missing_b: Missing in B list.
         name_a: Label A.
         name_b: Label B.
+
+    Returns:
+        None.
+    Raises:
+        None.
     """
     match, idx, sim = _find_best_clause_match(ca, clauses_b, used_b)
     if match is not None and sim >= SIMILARITY_MATCH_THRESHOLD:
@@ -289,6 +318,9 @@ def _match_clauses_heuristically(
 
     Returns:
         Tuple[List[Dict[str, Any]], List[Dict[str, Any]], List[Dict[str, Any]]]: Differences.
+
+    Raises:
+        None.
     """
     missing_in_b, differing, used_b = [], [], set()
     for ca in clauses_a:
@@ -310,6 +342,9 @@ def _build_heuristic_discussion_points(
 
     Returns:
         List[str]: Discussion points list.
+
+    Raises:
+        None.
     """
     points = [f"Discuss differing terms in '{i.get('topic')}' ({i.get('favors')})." for i in differing if i.get("significance") == "High"]
     points += [f"Evaluate removal of '{i.get('topic')}' from {name_b}." for i in missing_b if i.get("significance") == "High"]
@@ -328,6 +363,9 @@ def _heuristic_comparison_fallback(text_a: str, filename_a: str, text_b: str, fi
 
     Returns:
         Dict[str, Any]: Structured comparison dictionary.
+
+    Raises:
+        None.
     """
     clauses_a, clauses_b = extract_clauses(text_a), extract_clauses(text_b)
     for c in clauses_a + clauses_b:
@@ -361,6 +399,9 @@ def _validate_inputs(
 
     Returns:
         Optional[Dict[str, Any]]: Error dictionary if invalid, None if valid.
+
+    Raises:
+        None.
     """
     if not filepath_a or (isinstance(filepath_a, str) and not filepath_a.strip()):
         return {"status": "error", "error": f"Document A ('{filename_a}') is empty or missing.", "disclaimer": DISCLAIMER_TEXT}
@@ -378,6 +419,9 @@ def _format_risk_delta(rank_a: int, rank_b: int) -> Tuple[str, str]:
 
     Returns:
         Tuple[str, str]: Risk delta key and label.
+
+    Raises:
+        None.
     """
     if rank_b > rank_a:
         return "increased", "⚠️ Risk Increased in Version B"
@@ -395,6 +439,9 @@ def _build_matched_comp(ca: Dict[str, Any], cb: Dict[str, Any]) -> Dict[str, Any
 
     Returns:
         Dict[str, Any]: Visual comparison item for UI.
+
+    Raises:
+        None.
     """
     text_sim = difflib.SequenceMatcher(None, ca["text"].strip(), cb["text"].strip()).ratio()
     status = "unchanged" if text_sim >= TEXT_SIMILARITY_UNCHANGED else "modified"
@@ -418,6 +465,9 @@ def _build_removed_comp(ca: Dict[str, Any]) -> Dict[str, Any]:
 
     Returns:
         Dict[str, Any]: Formatted comparison item dictionary.
+
+    Raises:
+        None.
     """
     return {
         "status": "removed", "badge_class": "badge-danger", "similarity": 0.0,
@@ -436,6 +486,9 @@ def _build_added_comp(cb: Dict[str, Any]) -> Dict[str, Any]:
 
     Returns:
         Dict[str, Any]: Formatted comparison item dictionary.
+
+    Raises:
+        None.
     """
     return {
         "status": "added", "badge_class": "badge-success", "similarity": 0.0,
@@ -457,6 +510,9 @@ def _build_side_by_side_comparisons(
 
     Returns:
         List[Dict[str, Any]]: UI comparison items list.
+
+    Raises:
+        None.
     """
     comparisons, used_b = [], set()
     for ca in clauses_a:
@@ -480,6 +536,9 @@ def _enrich_clauses_for_diff(text: str) -> List[Dict[str, Any]]:
 
     Returns:
         List[Dict[str, Any]]: Enriched clauses list.
+
+    Raises:
+        None.
     """
     clauses = extract_clauses(text)
     for c in clauses:
@@ -496,6 +555,9 @@ def _calculate_comp_counts(comps: List[Dict[str, Any]]) -> Dict[str, int]:
 
     Returns:
         Dict[str, int]: Aggregate counts.
+
+    Raises:
+        None.
     """
     return {
         "total": len(comps),
@@ -522,6 +584,9 @@ def _run_comparison_engine(
 
     Returns:
         Dict[str, Any]: Parsed comparison result dictionary.
+
+    Raises:
+        None.
     """
     prompt = build_comparison_prompt(text_a, filename_a, text_b, filename_b)
     system_inst = "You are an expert legal document comparison assistant. Return valid JSON only."
@@ -543,6 +608,9 @@ def _handle_comparison_error(e: Exception) -> Dict[str, Any]:
 
     Returns:
         Dict[str, Any]: Safe error payload.
+
+    Raises:
+        None.
     """
     return {
         "status": "error", "error": str(e), "doc_a_type": "Unknown", "doc_b_type": "Unknown",
@@ -566,6 +634,9 @@ def _extract_comparison_texts(
 
     Returns:
         Tuple[Optional[str], Optional[str], Optional[Dict[str, Any]]]: text_a, text_b, err_dict.
+
+    Raises:
+        None.
     """
     text_a, text_b = extract_document_text(path_a), extract_document_text(path_b)
     if not text_a or not text_a.strip():
@@ -589,6 +660,9 @@ def compare_documents(
 
     Returns:
         Dict[str, Any]: Validated comparison result, metrics, and disclaimer.
+
+    Raises:
+        None.
     """
     err = _validate_inputs(filepath_a, filename_a, filepath_b, filename_b)
     if err:
@@ -615,6 +689,9 @@ def compute_clause_similarity(clause_a: Dict[str, Any], clause_b: Dict[str, Any]
 
     Returns:
         float: Similarity ratio between 0.0 and 1.0.
+
+    Raises:
+        None.
     """
     text_a = re.sub(r"\s+", " ", clause_a.get("text", "")).strip().lower()
     text_b = re.sub(r"\s+", " ", clause_b.get("text", "")).strip().lower()
@@ -638,6 +715,9 @@ def _format_diff_tags(opcodes: List[Tuple[str, int, int, int, int]], words_a: Li
 
     Returns:
         Tuple[List[str], List[str]]: Formatted token lists.
+
+    Raises:
+        None.
     """
     diff_a, diff_b = [], []
     for tag, i1, i2, j1, j2 in opcodes:
@@ -662,6 +742,9 @@ def generate_diff_html(text_a: str, text_b: str) -> Tuple[str, str]:
 
     Returns:
         Tuple[str, str]: HTML strings with diff markup for A and B.
+
+    Raises:
+        None.
     """
     words_a, words_b = text_a.split(), text_b.split()
     matcher = difflib.SequenceMatcher(None, words_a, words_b)

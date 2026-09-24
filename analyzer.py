@@ -28,7 +28,13 @@ from utils import (
 # CONFIG & CONSTANTS
 # ============================================================================
 
-MAX_DOCUMENT_CHARS = 100_000
+CONFIG = {
+    "MAX_DOCUMENT_CHARS": 30000,
+    "timeout": 30,
+    "temperature": 0.2,
+    "max_output_tokens": 4096,
+}
+MAX_DOCUMENT_CHARS = CONFIG["MAX_DOCUMENT_CHARS"]
 ALLOWED_DOC_EXTENSIONS = {".pdf", ".docx", ".txt", ".md"}
 
 SCORE_HIGH_WEIGHT = 35
@@ -57,12 +63,6 @@ DEFAULT_POSSIBLE_NEXT_STEPS: List[str] = [
     "Seek clarification before signing: Request written explanation or confirmation for ambiguous provisions.",
     "Walk away from this term: Evaluate whether high-risk or uncapped obligations are non-negotiable dealbreakers.",
 ]
-
-CONFIG = {
-    "timeout": 30,
-    "temperature": 0.2,
-    "max_output_tokens": 4096,
-}
 
 CLAUSE_CATEGORIES = [
     "Obligation", "Right", "Payment Term", "Termination",
@@ -295,6 +295,9 @@ def _build_clause_dict(
 
     Returns:
         Dict[str, Any]: Structured clause representation.
+
+    Raises:
+        None.
     """
     raw_hash = hashlib.md5(text.encode("utf-8")).hexdigest()[:HASH_PREFIX_LEN]
     return {
@@ -315,6 +318,9 @@ def _is_uppercase_heading(stripped: str) -> bool:
 
     Returns:
         bool: True if line matches uppercase heading heuristic, False otherwise.
+
+    Raises:
+        None.
     """
     return (
         len(stripped) < HEADING_MAX_LEN
@@ -337,6 +343,9 @@ def _parse_heading(
 
     Returns:
         Tuple[str, str]: Tuple of (clause_number, clause_title).
+
+    Raises:
+        None.
     """
     if not match:
         return f"§{clause_index}", stripped.title()
@@ -356,6 +365,9 @@ def _split_into_paragraph_clauses(text: str) -> List[Dict[str, Any]]:
 
     Returns:
         List[Dict[str, Any]]: List of paragraph-based clause objects.
+
+    Raises:
+        None.
     """
     paragraphs = [p.strip() for p in re.split(r"\n\s*\n", text) if p.strip()]
     clauses = []
@@ -376,6 +388,11 @@ def _append_clause_if_content(
         num: Clause number.
         title: Clause title.
         lines: Accumulated line buffer.
+
+    Returns:
+        None.
+    Raises:
+        None.
     """
     if lines:
         clauses.append(_build_clause_dict(len(clauses) + 1, num, title, "\n".join(lines).strip()))
@@ -389,6 +406,9 @@ def _process_lines_into_clauses(lines: List[str]) -> Tuple[List[Dict[str, Any]],
 
     Returns:
         Tuple[List[Dict[str, Any]], bool]: Extracted clauses and had_header flag.
+
+    Raises:
+        None.
     """
     clauses, curr_num, curr_title, curr_lines, had_header = [], "", "", [], False
     for line in lines:
@@ -416,6 +436,9 @@ def extract_clauses(document_text: str) -> List[Dict[str, Any]]:
 
     Returns:
         List[Dict[str, Any]]: Extracted structured clause records.
+
+    Raises:
+        None.
     """
     if not document_text or not document_text.strip():
         return []
@@ -439,6 +462,9 @@ def classify_clause(clause_text: str, title: str = "") -> str:
 
     Returns:
         str: Best matching category name or 'Other'.
+
+    Raises:
+        None.
     """
     combined = f"{title}\n{clause_text}".lower()
     title_lower = title.lower()
@@ -461,6 +487,9 @@ def _match_risk_rules(text_lower: str, level: str) -> Tuple[List[str], List[str]
 
     Returns:
         Tuple[List[str], List[str]]: Reasons and recommendations matched.
+
+    Raises:
+        None.
     """
     reasons, recs = [], []
     for rule in RISK_RULES.get(level, []):
@@ -483,6 +512,9 @@ def _resolve_risk_verdict(
 
     Returns:
         Tuple[str, List[str], List[str]]: Level, reasons, recommendations.
+
+    Raises:
+        None.
     """
     if high_reasons:
         return "high", high_reasons + med_reasons, high_recs + med_recs
@@ -502,6 +534,9 @@ def assess_risk(clause_text: str, category: str) -> Dict[str, Any]:
 
     Returns:
         Dict[str, Any]: Risk level, color, label, reasons, and recommendations.
+
+    Raises:
+        None.
     """
     text_lower = clause_text.lower()
     high_reasons, high_recs = _match_risk_rules(text_lower, "high")
@@ -530,6 +565,9 @@ def generate_plain_english_summary(
 
     Returns:
         str: Plain English description of clause obligations and risk notes.
+
+    Raises:
+        None.
     """
     base = CATEGORY_SUMMARIES.get(category, "Governs specific commercial terms between the parties.")
     if risk_info.get("level") == "high":
@@ -552,6 +590,9 @@ def _make_checklist_item(
 
     Returns:
         Dict[str, Any]: Formatted checklist item.
+
+    Raises:
+        None.
     """
     return {
         "clause_number": clause.get("number", "§"),
@@ -574,6 +615,9 @@ def _extract_urgent_clauses(
 
     Returns:
         List[Dict[str, Any]]: Formatted checklist questions.
+
+    Raises:
+        None.
     """
     items, seen = [], set()
     for clause in clauses:
@@ -596,6 +640,9 @@ def generate_lawyer_checklist(clauses: List[Dict[str, Any]]) -> List[Dict[str, A
 
     Returns:
         List[Dict[str, Any]]: Prioritized checklist items for lawyer consultation.
+
+    Raises:
+        None.
     """
     checklist = _extract_urgent_clauses(clauses)
     if not checklist:
@@ -620,6 +667,9 @@ def call_gemini_api_enrichment(text_snippet: str, api_key: str) -> Optional[Dict
 
     Returns:
         Optional[Dict[str, Any]]: Enriched JSON or None on failure.
+
+    Raises:
+        None.
     """
     prompt = (
         "You are a contract analysis assistant. Summarize the following contract provision in 1 plain English sentence "
@@ -644,6 +694,9 @@ def _resolve_api_key_and_filename(
 
     Returns:
         Tuple[str, Optional[str]]: Tuple of (api_key, filename).
+
+    Raises:
+        None.
     """
     if gemini_api_key is not None:
         return gemini_api_key, filename_or_key
@@ -663,6 +716,9 @@ def _assemble_clauses(
     Returns:
         Tuple[List[Dict[str, Any]], Dict[str, int], Dict[str, int]]:
             Analyzed clauses, category counts, and risk counts.
+
+    Raises:
+        None.
     """
     analyzed = []
     cat_counts = {c: 0 for c in CLAUSE_CATEGORIES}
@@ -688,6 +744,9 @@ def _compute_overall_risk(
 
     Returns:
         Tuple[int, str, str]: Tuple of (score, level, label).
+
+    Raises:
+        None.
     """
     divisor = max(total, 1) * SCORE_BASE_DIVISOR
     weighted = (risk_counts["high"] * SCORE_HIGH_WEIGHT) + (risk_counts["medium"] * SCORE_MEDIUM_WEIGHT)
@@ -707,6 +766,9 @@ def _extract_next_steps(gemini_res: Any) -> List[str]:
 
     Returns:
         List[str]: List of 2-4 next-step paths or default paths.
+
+    Raises:
+        None.
     """
     if isinstance(gemini_res, dict):
         raw = gemini_res.get("possible_next_steps")
@@ -730,6 +792,9 @@ def _format_analysis_metadata(
 
     Returns:
         Dict[str, Any]: Metadata dictionary.
+
+    Raises:
+        None.
     """
     score, level, label = _compute_overall_risk(len(analyzed), risk_counts)
     words = sum(c["word_count"] for c in analyzed)
@@ -754,6 +819,9 @@ def _format_analysis_result(
 
     Returns:
         Dict[str, Any]: Success payload.
+
+    Raises:
+        None.
     """
     duration = round(time.time() - start, DEFAULT_DURATION_DECIMALS)
     meta = _format_analysis_metadata(analyzed, risk_counts, duration, cat_counts)
@@ -778,6 +846,9 @@ def analyze_document(
 
     Returns:
         Dict[str, Any]: Dictionary containing status, metadata, clauses, checklist, possible_next_steps.
+
+    Raises:
+        None.
     """
     start = time.time()
     api_key, filename = _resolve_api_key_and_filename(filename_or_key, gemini_api_key)
@@ -798,6 +869,9 @@ def _extract_risk_counts(clauses: List[Any]) -> Dict[str, int]:
 
     Returns:
         Dict[str, int]: Tally of high, medium, and low clauses.
+
+    Raises:
+        None.
     """
     counts = {"high": 0, "medium": 0, "low": 0}
     for c in clauses:
@@ -814,6 +888,9 @@ def calculate_risk_summary(analysis_result: Any) -> Dict[str, Any]:
 
     Returns:
         Dict[str, Any]: Summary dictionary with counts, scores, and labels.
+
+    Raises:
+        None.
     """
     clauses = analysis_result if isinstance(analysis_result, list) else analysis_result.get("clauses", []) if isinstance(analysis_result, dict) else []
     counts = _extract_risk_counts(clauses)
@@ -838,6 +915,9 @@ def _read_txt_from_stream(source: Any) -> str:
 
     Returns:
         str: Decoded string.
+
+    Raises:
+        None.
     """
     content = source.read()
     if hasattr(source, "seek"):
@@ -965,6 +1045,9 @@ def _analysis_json_schema() -> str:
 
     Returns:
         str: JSON schema text.
+
+    Raises:
+        None.
     """
     return (
         '{\n'
@@ -991,6 +1074,9 @@ def build_analysis_prompt(document_text: str, filename: Optional[str] = None) ->
 
     Returns:
         str: Formatted prompt string requiring strict JSON output.
+
+    Raises:
+        None.
     """
     doc_label = f'"{filename}"' if filename else "the uploaded document"
     return (
@@ -1002,5 +1088,6 @@ def build_analysis_prompt(document_text: str, filename: Optional[str] = None) ->
         f"framed strictly as informational paths, not legal recommendations.\n\n"
         f"DOCUMENT TEXT:\n---\n{document_text[:MAX_DOCUMENT_CHARS]}\n---\n\n"
         f"Analyze the clauses and provide your output strictly as a JSON object matching this schema:\n"
-        f"{_analysis_json_schema()}"
+        f"{_analysis_json_schema()}\n\n"
+        f"Respond with ONLY the JSON object, no explanation text before or after."
     )

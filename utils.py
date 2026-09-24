@@ -286,6 +286,9 @@ def cleanup_old_uploads(
 
     Returns:
         int: Number of files successfully deleted.
+
+    Raises:
+        None.
     """
     if not upload_folder or not os.path.isdir(upload_folder):
         return 0
@@ -308,6 +311,9 @@ def redact_preview(text: str, max_chars: int = DEFAULT_PREVIEW_MAX_CHARS) -> str
 
     Returns:
         str: Safe preview text, with ellipsis added if truncated.
+
+    Raises:
+        None.
     """
     if not text:
         return ""
@@ -324,6 +330,9 @@ def clean_contract_text(text: str) -> str:
 
     Returns:
         str: Normalized text with consistent newlines and stripped whitespace.
+
+    Raises:
+        None.
     """
     if not text:
         return ""
@@ -413,6 +422,9 @@ def _is_invalid_key(api_key: Optional[str]) -> bool:
 
     Returns:
         bool: True if key is empty or placeholder, False otherwise.
+
+    Raises:
+        None.
     """
     return not api_key or api_key.strip() == "" or api_key == "your_gemini_api_key_here"
 
@@ -429,6 +441,9 @@ def _send_gemini_request(
 
     Returns:
         Optional[requests.Response]: Response object if request succeeds, None on error.
+
+    Raises:
+        None.
     """
     headers = {"Content-Type": "application/json"}
     url = f"{GEMINI_API_URL}?key={api_key}"
@@ -446,6 +461,9 @@ def _parse_candidate_text(response: requests.Response) -> Optional[str]:
 
     Returns:
         Optional[str]: Clean candidate text if found, None otherwise.
+
+    Raises:
+        None.
     """
     if response.status_code != HTTP_STATUS_OK:
         return None
@@ -472,6 +490,9 @@ def _build_gemini_json_payload(
 
     Returns:
         Dict[str, Any]: Formatted request payload.
+
+    Raises:
+        None.
     """
     payload: Dict[str, Any] = {
         "contents": [{"parts": [{"text": prompt}]}],
@@ -497,6 +518,9 @@ def _build_gemini_text_payload(
 
     Returns:
         Dict[str, Any]: Formatted request payload.
+
+    Raises:
+        None.
     """
     payload: Dict[str, Any] = {
         "contents": [{"parts": [{"text": prompt}]}],
@@ -518,6 +542,9 @@ def _parse_json_markdown(raw_text: str) -> Optional[Dict[str, Any]]:
 
     Returns:
         Optional[Dict[str, Any]]: Parsed JSON dictionary, or None on error.
+
+    Raises:
+        None.
     """
     text_clean = re.sub(r"^```(?:json)?\s*", "", raw_text.strip(), flags=re.IGNORECASE)
     text_clean = re.sub(r"\s*```$", "", text_clean)
@@ -539,6 +566,9 @@ def call_gemini_api(
 
     Returns:
         Optional[Dict[str, Any]]: Parsed JSON dictionary, or None if failed.
+
+    Raises:
+        None.
     """
     if _is_invalid_key(api_key):
         return None
@@ -562,6 +592,9 @@ def call_gemini_text(
 
     Returns:
         Optional[str]: Response text from Gemini, or None if unavailable.
+
+    Raises:
+        None.
     """
     if _is_invalid_key(api_key):
         return None

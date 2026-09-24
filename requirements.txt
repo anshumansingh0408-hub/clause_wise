@@ -1,5 +1,7 @@
 flask
+flask-compress
 requests
 pypdf
 python-docx
 pytest
+
